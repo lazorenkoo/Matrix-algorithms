@@ -1,3 +1,5 @@
+from time import perf_counter
+
 import numpy as np
 
 
@@ -78,7 +80,9 @@ if __name__ == "__main__":
     A = generate_matrix(n)
     B = generate_matrix(n)
 
+    start = perf_counter()
     C, multiplications, additions = binet(A, B)
+    elapsed = perf_counter() - start
 
     print("A:\n", A)
     print("B:\n", B)
@@ -86,3 +90,4 @@ if __name__ == "__main__":
     print("Multiplications:", multiplications)
     print("Additions:", additions)
     print("FLOPs:", multiplications + additions)
+    print("Time (seconds):", elapsed)
