@@ -2,27 +2,40 @@ import numpy as np
 
 
 def binet(A: np.ndarray, B: np.ndarray) -> tuple[np.ndarray, int, int]:
-    """Multiply equal-sized square matrices; return C, multiplications, additions.
 
-    Inputs must be nonempty square matrices of equal size, a power of two.
-    """
-    n = A.shape[0]
+    rows, common = A.shape
+    cols = B.shape[1]
 
-    if n == 1:
-        C = np.array([[A[0, 0] * B[0, 0]]])
-        return C, 1, 0
+    if rows == 1 or common == 1 or cols == 1:
+        C = np.zeros((rows, cols))
+        multiplications = 0
+        additions = 0
 
-    mid = n // 2
+        for i in range(rows):
+            for j in range(cols):
+                C[i, j] = A[i, 0] * B[0, j]
+                multiplications += 1
 
-    A11 = A[:mid, :mid]
-    A12 = A[:mid, mid:]
-    A21 = A[mid:, :mid]
-    A22 = A[mid:, mid:]
+                for k in range(1, common):
+                    C[i, j] += A[i, k] * B[k, j]
+                    multiplications += 1
+                    additions += 1
 
-    B11 = B[:mid, :mid]
-    B12 = B[:mid, mid:]
-    B21 = B[mid:, :mid]
-    B22 = B[mid:, mid:]
+        return C, multiplications, additions
+
+    mid_rows = rows // 2
+    mid_common = common // 2
+    mid_cols = cols // 2
+
+    A11 = A[:mid_rows, :mid_common]
+    A12 = A[:mid_rows, mid_common:]
+    A21 = A[mid_rows:, :mid_common]
+    A22 = A[mid_rows:, mid_common:]
+
+    B11 = B[:mid_common, :mid_cols]
+    B12 = B[:mid_common, mid_cols:]
+    B21 = B[mid_common:, :mid_cols]
+    B22 = B[mid_common:, mid_cols:]
 
     P1, mul1, add1 = binet(A11, B11)
     P2, mul2, add2 = binet(A12, B21)
