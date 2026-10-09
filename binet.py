@@ -1,6 +1,13 @@
 import numpy as np
 
 
+def generate_matrix(n: int) -> np.ndarray:
+    rng = np.random.default_rng()
+    low = np.nextafter(0.00000001, 1.0)
+    high = np.nextafter(1.0, 0.0)
+    return rng.uniform(low, high, size=(n, n))
+
+
 def binet(A: np.ndarray, B: np.ndarray) -> tuple[np.ndarray, int, int]:
 
     rows, common = A.shape
@@ -64,3 +71,18 @@ def binet(A: np.ndarray, B: np.ndarray) -> tuple[np.ndarray, int, int]:
     )
 
     return C, multiplications, additions
+
+
+if __name__ == "__main__":
+    n = 4
+    A = generate_matrix(n)
+    B = generate_matrix(n)
+
+    C, multiplications, additions = binet(A, B)
+
+    print("A:\n", A)
+    print("B:\n", B)
+    print("C:\n", C)
+    print("Multiplications:", multiplications)
+    print("Additions:", additions)
+    print("FLOPs:", multiplications + additions)
