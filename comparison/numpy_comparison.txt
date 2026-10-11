@@ -1,0 +1,19 @@
+Porównanie algorytmu Binéta z NumPy
+Ziarno generatora dla każdego rozmiaru: 42
+Typ danych: float64; atol=1e-12, rtol=1e-12
+Wyniki weryfikacji w Octave: octave_matlab_comparison.txt.
+
+Rozmiar | Maks. błąd bezwzględny | Zgodność | Mnożenia | Dodawania | FLOPs
+1 × 1 | 0.000000e+00 | TAK | 1 | 0 | 1
+2 × 2 | 0.000000e+00 | TAK | 8 | 4 | 12
+3 × 3 | 2.220446e-16 | TAK | 27 | 18 | 45
+4 × 4 | 2.220446e-16 | TAK | 64 | 48 | 112
+5 × 5 | 4.440892e-16 | TAK | 125 | 100 | 225
+8 × 8 | 4.440892e-16 | TAK | 512 | 448 | 960
+17 × 17 | 2.664535e-15 | TAK | 4913 | 4624 | 9537
+32 × 32 | 5.329071e-15 | TAK | 32768 | 31744 | 64512
+64 × 64 | 1.421085e-14 | TAK | 262144 | 258048 | 520192
+96 × 96 | 2.842171e-14 | TAK | 884736 | 875520 | 1760256
+128 × 128 | 4.263256e-14 | TAK | 2097152 | 2080768 | 4177920
+256 × 256 | 7.105427e-14 | TAK | 16777216 | 16711680 | 33488896
+512 × 512 | 1.136868e-13 | TAK | 134217728 | 133955584 | 268173312

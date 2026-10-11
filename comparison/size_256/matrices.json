@@ -1,0 +1,11 @@
+{
+  "size": 256,
+  "dtype": "float64",
+  "seed": 42,
+  "generator": "PCG64",
+  "generation_order": "A, then B; generator restarted for each size",
+  "interval": "(1e-8, 1.0)",
+  "A_sha256": "99ce7109c9de7cf07c1e9714c80e73a461aa6081e96321819965033e96982c9a",
+  "B_sha256": "1e236419c2fd0876a7ac4fe764d154c5e1f1784fd2b15492be08eb4f70d9cde6",
+  "reuse": "Binet and Strassen must load the same saved A.csv and B.csv"
+}

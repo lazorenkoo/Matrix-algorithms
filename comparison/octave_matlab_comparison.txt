@@ -1,0 +1,21 @@
+Porownanie algorytmu Bineta z GNU Octave/MATLAB
+Wersja programu referencyjnego: 11.3.0
+Referencja: A * B, obliczone w programie referencyjnym.
+Typ danych: double; atol=1e-12, rtol=1e-12
+
+Czas: mediana czasow serii podzielonych przez liczbe mnozen w serii.
+Serie zawieraja narzut petli Octave; odczyt i zapis CSV poza pomiarem.
+Rozmiar | Maks. blad bezwzgledny | Zgodnosc | Czas [s] | Powtorzenia
+1 x 1 | 0.000000e+00 | TAK | 1.026154e-06 | 7
+2 x 2 | 0.000000e+00 | TAK | 1.739979e-06 | 7
+3 x 3 | 2.220446e-16 | TAK | 1.803160e-06 | 7
+4 x 4 | 2.220446e-16 | TAK | 1.746893e-06 | 7
+5 x 5 | 4.440892e-16 | TAK | 1.664877e-06 | 7
+8 x 8 | 4.440892e-16 | TAK | 1.652002e-06 | 7
+17 x 17 | 2.664535e-15 | TAK | 2.179861e-06 | 7
+32 x 32 | 5.329071e-15 | TAK | 3.717184e-06 | 7
+64 x 64 | 1.421085e-14 | TAK | 1.451397e-05 | 7
+96 x 96 | 2.842171e-14 | TAK | 4.701805e-05 | 7
+128 x 128 | 4.263256e-14 | TAK | 8.174109e-05 | 3
+256 x 256 | 7.105427e-14 | TAK | 2.652717e-04 | 1
+512 x 512 | 1.136868e-13 | TAK | 1.817679e-03 | 1
