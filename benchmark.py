@@ -1,24 +1,32 @@
 import csv
 from pathlib import Path
+from statistics import median
 from time import perf_counter
 
 from binet import binet, generate_matrix
 
 
-def benchmark(max_size: int = 20) -> list[tuple[int, float, int, int, int]]:
+def benchmark(
+    max_size: int = 20, repeats: int = 5
+) -> list[tuple[int, float, int, int, int]]:
     results = []
 
     for n in range(1, max_size + 1):
         A = generate_matrix(n)
         B = generate_matrix(n)
 
-        start = perf_counter()
-        C, multiplications, additions = binet(A, B)
-        elapsed = perf_counter() - start
+        times = []
+
+        for _ in range(repeats):
+            start = perf_counter()
+            C, multiplications, additions = binet(A, B)
+            times.append(perf_counter() - start)
+
+        elapsed = median(times)
 
         flops = multiplications + additions
         results.append((n, elapsed, multiplications, additions, flops))
-        print(f"n={n}, time={elapsed:.6f} s, FLOPs={flops}")
+        print(f"n={n}, median time={elapsed:.6f} s, FLOPs={flops}")
 
     return results
 
