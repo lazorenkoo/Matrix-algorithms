@@ -1,0 +1,25 @@
+AlphaTensor coefficients for multiplication (4, 5, 5), rank 76.
+Copyright 2022 DeepMind Technologies Limited.
+
+Source repository: https://github.com/google-deepmind/alphatensor
+Source commit: 1949163da3bef7e3eb268a3ac015fd1c2dbfc767
+Source file: algorithms/factorizations_r.npz
+Source URL: https://raw.githubusercontent.com/google-deepmind/alphatensor/1949163da3bef7e3eb268a3ac015fd1c2dbfc767/algorithms/factorizations_r.npz
+
+Data license: Creative Commons Attribution 4.0 International (CC BY 4.0).
+License URL: https://creativecommons.org/licenses/by/4.0/
+The source repository identifies non-software materials as CC BY 4.0.
+
+Changes: extracted U, V, W for (4, 5, 5), stored as signed integer arrays
+without pickle. Reordered W from the source's transposed output indexing
+to row-major indexing of A @ B. Verified the tensor identity exactly.
+
+Reference: Fawzi, A. et al. (2022), Discovering faster matrix multiplication
+algorithms with reinforcement learning. Nature 610, 47–53.
+DOI: https://doi.org/10.1038/s41586-022-05172-4
+
+Operation counting: each scalar multiplication and binary addition or
+subtraction counts as one. Unary sign changes, copies, slices and allocation
+are not counted. Arithmetic involving padded zeros is counted.
+The scalar 4x5 by 5x5 kernel uses 76 multiplications and 549 binary additions
+or subtractions. The model is not run during matrix multiplication.

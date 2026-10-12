@@ -8,6 +8,7 @@ import tracemalloc
 from binet import binet, generate_matrix
 from matrix_cases import load_matrix_pair
 from strassen import strassen
+from alphatensor import alphatensor, coefficients
 
 
 def benchmark_memory(
@@ -24,7 +25,7 @@ def benchmark_memory(
             csv.writer(file).writerow([
                 "size", "peak_traced_memory_mib", "input_buffers_mib",
                 "multiplications",
-                "additions_subtractions" if algorithm is strassen else "additions",
+                "additions" if algorithm is binet else "additions_subtractions",
                 "flops",
             ])
 
@@ -65,7 +66,7 @@ def benchmark_memory(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Measure matrix multiplication memory separately from timing.")
-    parser.add_argument("--algorithm", choices=["binet", "strassen"], default="binet")
+    parser.add_argument("--algorithm", choices=["binet", "strassen", "alphatensor"], default="binet")
     parser.add_argument(
         "--sizes", type=int, nargs="+",
         default=None,
@@ -75,10 +76,12 @@ if __name__ == "__main__":
     args = parser.parse_args()
     if args.sizes is None:
         args.sizes = [1, 2, 4, 8, 16, 32, 64, 128, 200, 256]
-    algorithm = binet if args.algorithm == "binet" else strassen
+    algorithm = {"binet": binet, "strassen": strassen, "alphatensor": alphatensor}[args.algorithm]
+    if args.algorithm == "alphatensor":
+        coefficients()
     output_path = Path(__file__).with_name(f"{args.algorithm}_memory_results.csv")
     benchmark_memory(
         args.sizes, output_path, args.resume, args.time_budget,
-        algorithm=algorithm, saved_inputs=args.algorithm == "strassen",
+        algorithm=algorithm, saved_inputs=args.algorithm != "binet",
     )
     print(f"Memory results saved to {output_path}")

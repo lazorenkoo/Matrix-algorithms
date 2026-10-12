@@ -13,6 +13,7 @@ from strassen import strassen
 def benchmark_strassen(
     sizes: list[int], output_path: Path, resume: bool = False,
     time_budget: float = 600,
+    algorithm=strassen, algorithm_name: str = "strassen",
 ) -> None:
     completed = set()
     if resume and output_path.exists():
@@ -34,12 +35,12 @@ def benchmark_strassen(
             break
 
         repeats = 5 if n <= 32 else 3 if n <= 128 else 1
-        print(f"Starting Strassen n={n}, repeats={repeats}", flush=True)
+        print(f"Starting {algorithm_name} n={n}, repeats={repeats}", flush=True)
         A, B = load_matrix_pair(n)
         times = []
         for _ in range(repeats):
             start = perf_counter()
-            C, multiplications, additions = strassen(A, B)
+            C, multiplications, additions = algorithm(A, B)
             times.append(perf_counter() - start)
 
         elapsed = median(times)
@@ -48,7 +49,7 @@ def benchmark_strassen(
         reference = np.loadtxt(folder / "C_octave_matlab.csv", delimiter=",", ndmin=2)
         max_error = np.max(np.abs(C - reference))
         matching = np.allclose(C, reference, atol=1e-12, rtol=1e-12)
-        np.savetxt(folder / "C_strassen.csv", C, delimiter=",", fmt="%.17g")
+        np.savetxt(folder / f"C_{algorithm_name}.csv", C, delimiter=",", fmt="%.17g")
 
         with output_path.open("a", newline="", encoding="utf-8") as file:
             csv.writer(file).writerow([
