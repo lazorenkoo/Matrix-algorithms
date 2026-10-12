@@ -1,3 +1,4 @@
+import argparse
 import csv
 from pathlib import Path
 
@@ -8,7 +9,7 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import ScalarFormatter
 
 
-def plot_results(csv_path: Path) -> None:
+def plot_results(csv_path: Path, algorithm: str = "binet") -> None:
     with csv_path.open(newline="", encoding="utf-8") as file:
         rows = sorted(csv.DictReader(file), key=lambda row: int(row["size"]))
 
@@ -19,12 +20,14 @@ def plot_results(csv_path: Path) -> None:
     output_dir = csv_path.parent / "plots"
     output_dir.mkdir(exist_ok=True)
 
+    name = "Binéta" if algorithm == "binet" else "Strassena"
+    color = "#2563eb" if algorithm == "binet" else "#ea580c"
     charts = [
-        (sizes, times, "Czas wykonania algorytmu Binéta", "Czas wykonania [s]", "binet_time.png"),
-        (sizes, flops, "Liczba operacji algorytmu Binéta", "Liczba operacji zmiennoprzecinkowych", "binet_flops.png"),
+        (sizes, times, f"Czas wykonania algorytmu {name}", "Czas wykonania [s]", f"{algorithm}_time.png"),
+        (sizes, flops, f"Liczba operacji algorytmu {name}", "Liczba operacji zmiennoprzecinkowych", f"{algorithm}_flops.png"),
     ]
 
-    memory_path = csv_path.with_name("binet_memory_results.csv")
+    memory_path = csv_path.with_name(f"{algorithm}_memory_results.csv")
     if memory_path.exists():
         with memory_path.open(newline="", encoding="utf-8") as file:
             memory_rows = sorted(csv.DictReader(file), key=lambda row: int(row["size"]))
@@ -32,14 +35,14 @@ def plot_results(csv_path: Path) -> None:
             memory_sizes = [int(row["size"]) for row in memory_rows]
             memory = [float(row["peak_traced_memory_mib"]) for row in memory_rows]
             charts.append((
-                memory_sizes, memory, "Pamięć algorytmu Binéta",
-                "Szczyt śledzonych alokacji [MiB]", "binet_memory.png",
+                memory_sizes, memory, f"Pamięć algorytmu {name}",
+                "Szczyt śledzonych alokacji [MiB]", f"{algorithm}_memory.png",
             ))
 
     for chart_sizes, values, title, ylabel, filename in charts:
         fig, ax = plt.subplots(figsize=(9, 5.5), layout="constrained")
-        ax.plot(chart_sizes, values, color="#2563eb", linewidth=1.6)
-        ax.scatter(chart_sizes, values, color="#2563eb", s=12, zorder=3)
+        ax.plot(chart_sizes, values, color=color, linewidth=1.6)
+        ax.scatter(chart_sizes, values, color=color, s=12, zorder=3)
         ax.set_title(title, pad=14, fontweight="bold")
         ax.set_xscale("log", base=2)
         ax.set_yscale("log")
@@ -64,4 +67,7 @@ def plot_results(csv_path: Path) -> None:
 
 
 if __name__ == "__main__":
-    plot_results(Path(__file__).with_name("binet_results.csv"))
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--algorithm", choices=["binet", "strassen"], default="binet")
+    args = parser.parse_args()
+    plot_results(Path(__file__).with_name(f"{args.algorithm}_results.csv"), args.algorithm)
