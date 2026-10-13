@@ -64,6 +64,7 @@ def benchmark_strassen(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Benchmark Strassen using saved comparison matrices.")
+    parser.add_argument("--compiled", action="store_true", help="Use the native strassen_compiled module and separate results.")
     parser.add_argument(
         "--sizes", type=int, nargs="+",
         default=[1, 2, 3, 4, 5, 8, 17, 32, 64, 96, 128, 256, 512],
@@ -71,6 +72,17 @@ if __name__ == "__main__":
     parser.add_argument("--resume", action="store_true")
     parser.add_argument("--time-budget", type=float, default=600)
     args = parser.parse_args()
-    output_path = Path(__file__).with_name("strassen_results.csv")
-    benchmark_strassen(args.sizes, output_path, args.resume, args.time_budget)
+    algorithm = strassen
+    algorithm_name = "strassen"
+    if args.compiled:
+        from strassen_compiled import strassen as algorithm
+        import strassen_compiled
+
+        print(f"Compiled module: {strassen_compiled.__file__}", flush=True)
+        algorithm_name = "strassen_compiled"
+    output_path = Path(__file__).with_name(f"{algorithm_name}_results.csv")
+    benchmark_strassen(
+        args.sizes, output_path, args.resume, args.time_budget,
+        algorithm=algorithm, algorithm_name=algorithm_name,
+    )
     print(f"Results saved to {output_path}")
