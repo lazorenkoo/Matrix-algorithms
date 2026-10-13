@@ -1,3 +1,4 @@
+import argparse
 import csv
 from pathlib import Path
 
@@ -13,7 +14,7 @@ def read_results(path: Path):
         return {int(row["size"]): row for row in csv.DictReader(file)}
 
 
-def plot_all() -> None:
+def plot_all(compiled: bool = False) -> None:
     root = Path(__file__).parent
     output_dir = root / "plots"
     output_dir.mkdir(exist_ok=True)
@@ -22,6 +23,9 @@ def plot_all() -> None:
         ("strassen", "Strassen", "#ea580c", "s"),
         ("alphatensor", "AlphaTensor", "#16a34a", "^"),
     ]
+    if compiled:
+        methods = [(method + "_compiled", label + " (Cython)", color, marker)
+                   for method, label, color, marker in methods]
     charts = [
         (
             "results", "time_seconds", "Porównanie czasu mnożenia macierzy",
@@ -41,6 +45,10 @@ def plot_all() -> None:
     ]
 
     for suffix, field, title, ylabel, filename, note in charts:
+        if compiled:
+            filename = filename.replace(".png", "_compiled.png")
+            if field == "time_seconds":
+                note = "Wszystkie metody: skompilowane moduły Cython i wspólne zapisane pary macierzy."
         datasets = [read_results(root / f"{method}_{suffix}.csv") for method, _, _, _ in methods]
         sizes = sorted(set.intersection(*(set(dataset) for dataset in datasets)))
         fig, ax = plt.subplots(figsize=(10, 6), layout="constrained")
@@ -73,4 +81,7 @@ def plot_all() -> None:
 
 
 if __name__ == "__main__":
-    plot_all()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--compiled", action="store_true")
+    args = parser.parse_args()
+    plot_all(compiled=args.compiled)

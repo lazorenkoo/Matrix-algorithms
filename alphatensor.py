@@ -3,7 +3,10 @@ from pathlib import Path
 
 import numpy as np
 
-from strassen import multiply_direct
+if __name__ == "alphatensor_compiled":
+    from strassen_compiled import multiply_direct
+else:
+    from strassen import multiply_direct
 
 
 @lru_cache(maxsize=1)

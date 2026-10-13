@@ -66,7 +66,7 @@ def benchmark_memory(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Measure matrix multiplication memory separately from timing.")
-    parser.add_argument("--algorithm", choices=["binet", "binet_compiled", "strassen", "strassen_compiled", "alphatensor"], default="binet")
+    parser.add_argument("--algorithm", choices=["binet", "binet_compiled", "strassen", "strassen_compiled", "alphatensor", "alphatensor_compiled"], default="binet")
     parser.add_argument(
         "--sizes", type=int, nargs="+",
         default=None,
@@ -86,6 +86,13 @@ if __name__ == "__main__":
         import strassen_compiled
 
         print(f"Compiled module: {strassen_compiled.__file__}", flush=True)
+    elif args.algorithm == "alphatensor_compiled":
+        from alphatensor_compiled import alphatensor as algorithm
+        from alphatensor_compiled import coefficients as compiled_coefficients
+        import alphatensor_compiled
+
+        print(f"Compiled module: {alphatensor_compiled.__file__}", flush=True)
+        compiled_coefficients()
     else:
         algorithm = {"binet": binet, "strassen": strassen, "alphatensor": alphatensor}[args.algorithm]
     if args.algorithm == "alphatensor":
