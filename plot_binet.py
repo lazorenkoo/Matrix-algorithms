@@ -20,8 +20,8 @@ def plot_results(csv_path: Path, algorithm: str = "binet") -> None:
     output_dir = csv_path.parent / "plots"
     output_dir.mkdir(exist_ok=True)
 
-    name = {"binet": "Binéta", "strassen": "Strassena", "alphatensor": "AlphaTensor"}[algorithm]
-    color = {"binet": "#2563eb", "strassen": "#ea580c", "alphatensor": "#16a34a"}[algorithm]
+    name = {"binet": "Binéta", "binet_compiled": "Binéta (Cython)", "strassen": "Strassena", "alphatensor": "AlphaTensor"}[algorithm]
+    color = {"binet": "#2563eb", "binet_compiled": "#2563eb", "strassen": "#ea580c", "alphatensor": "#16a34a"}[algorithm]
     charts = [
         (sizes, times, f"Czas wykonania algorytmu {name}", "Czas wykonania [s]", f"{algorithm}_time.png"),
         (sizes, flops, f"Liczba operacji algorytmu {name}", "Liczba operacji zmiennoprzecinkowych", f"{algorithm}_flops.png"),
@@ -68,6 +68,6 @@ def plot_results(csv_path: Path, algorithm: str = "binet") -> None:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--algorithm", choices=["binet", "strassen", "alphatensor"], default="binet")
+    parser.add_argument("--algorithm", choices=["binet", "binet_compiled", "strassen", "alphatensor"], default="binet")
     args = parser.parse_args()
     plot_results(Path(__file__).with_name(f"{args.algorithm}_results.csv"), args.algorithm)

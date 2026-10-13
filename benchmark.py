@@ -5,6 +5,7 @@ from statistics import median
 from time import perf_counter
 
 from binet import binet, generate_matrix
+from matrix_cases import load_matrix_pair
 
 
 def benchmark(
@@ -15,6 +16,8 @@ def benchmark(
     resume: bool = False,
     adaptive: bool = False,
     time_budget: float | None = None,
+    algorithm=binet,
+    saved_inputs: bool = False,
 ) -> list[tuple[int, float, int, int, int]]:
     results = []
 
@@ -47,14 +50,17 @@ def benchmark(
             size_repeats = 7 if n <= 100 else 3 if n <= 200 else 1
 
         print(f"Starting n={n}, repeats={size_repeats}", flush=True)
-        A = generate_matrix(n)
-        B = generate_matrix(n)
+        if saved_inputs:
+            A, B = load_matrix_pair(n)
+        else:
+            A = generate_matrix(n)
+            B = generate_matrix(n)
 
         times = []
 
         for _ in range(size_repeats):
             start = perf_counter()
-            C, multiplications, additions = binet(A, B)
+            C, multiplications, additions = algorithm(A, B)
             times.append(perf_counter() - start)
 
         elapsed = median(times)
@@ -74,6 +80,7 @@ def benchmark(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Measure Binet multiplication time and FLOPs.")
+    parser.add_argument("--compiled", action="store_true", help="Use the native binet_compiled module and separate results.")
     parser.add_argument(
         "--max-size", type=int, default=128,
         help="Measure every matrix size from 1 to this value (default: 128).",
@@ -104,11 +111,20 @@ if __name__ == "__main__":
         if args.time_budget is None:
             args.time_budget = 600
 
-    output_path = Path(__file__).with_name("binet_results.csv")
+    algorithm = binet
+    result_name = "binet"
+    if args.compiled:
+        from binet_compiled import binet as algorithm
+        import binet_compiled
+
+        print(f"Compiled module: {binet_compiled.__file__}", flush=True)
+        result_name = "binet_compiled"
+    output_path = Path(__file__).with_name(f"{result_name}_results.csv")
     results = benchmark(
         max_size=args.max_size, repeats=args.repeats, output_path=output_path,
         sizes=args.sizes, resume=args.resume, adaptive=args.adaptive,
         time_budget=args.time_budget,
+        algorithm=algorithm, saved_inputs=args.compiled,
     )
 
     print(f"Results saved to {output_path}")

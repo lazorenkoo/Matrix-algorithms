@@ -25,7 +25,7 @@ def benchmark_memory(
             csv.writer(file).writerow([
                 "size", "peak_traced_memory_mib", "input_buffers_mib",
                 "multiplications",
-                "additions" if algorithm is binet else "additions_subtractions",
+                "additions" if algorithm.__name__ == "binet" else "additions_subtractions",
                 "flops",
             ])
 
@@ -66,7 +66,7 @@ def benchmark_memory(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Measure matrix multiplication memory separately from timing.")
-    parser.add_argument("--algorithm", choices=["binet", "strassen", "alphatensor"], default="binet")
+    parser.add_argument("--algorithm", choices=["binet", "binet_compiled", "strassen", "alphatensor"], default="binet")
     parser.add_argument(
         "--sizes", type=int, nargs="+",
         default=None,
@@ -76,7 +76,13 @@ if __name__ == "__main__":
     args = parser.parse_args()
     if args.sizes is None:
         args.sizes = [1, 2, 4, 8, 16, 32, 64, 128, 200, 256]
-    algorithm = {"binet": binet, "strassen": strassen, "alphatensor": alphatensor}[args.algorithm]
+    if args.algorithm == "binet_compiled":
+        from binet_compiled import binet as algorithm
+        import binet_compiled
+
+        print(f"Compiled module: {binet_compiled.__file__}", flush=True)
+    else:
+        algorithm = {"binet": binet, "strassen": strassen, "alphatensor": alphatensor}[args.algorithm]
     if args.algorithm == "alphatensor":
         coefficients()
     output_path = Path(__file__).with_name(f"{args.algorithm}_memory_results.csv")

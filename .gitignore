@@ -1,4 +1,8 @@
 __pycache__/
+build/
+*.pyd
+*.so
+*.egg-info/
 *.py[cod]
 binet_results_before_restart_*.csv
 binet_results_1_100_7_repeats.csv
