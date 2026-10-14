@@ -14,6 +14,7 @@ def benchmark_strassen(
     sizes: list[int], output_path: Path, resume: bool = False,
     time_budget: float = 600,
     algorithm=strassen, algorithm_name: str = "strassen",
+    small_repeats: int | None = None,
 ) -> None:
     completed = set()
     if resume and output_path.exists():
@@ -22,7 +23,8 @@ def benchmark_strassen(
     else:
         with output_path.open("w", newline="", encoding="utf-8") as file:
             csv.writer(file).writerow([
-                "size", "time_seconds", "multiplications", "additions_subtractions",
+                "size", "time_seconds", "multiplications",
+                "additions" if algorithm_name.startswith("binet") else "additions_subtractions",
                 "flops", "repeats", "max_absolute_error", "matches_octave",
             ])
 
@@ -35,6 +37,8 @@ def benchmark_strassen(
             break
 
         repeats = 5 if n <= 32 else 3 if n <= 128 else 1
+        if small_repeats is not None:
+            repeats = small_repeats if n <= 128 else 1
         print(f"Starting {algorithm_name} n={n}, repeats={repeats}", flush=True)
         A, B = load_matrix_pair(n)
         times = []

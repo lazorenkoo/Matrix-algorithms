@@ -1,0 +1,43 @@
+{
+  "started_at": "2026-10-14T09:43:04.796586+02:00",
+  "python": "3.14.4",
+  "numpy": "2.4.4",
+  "cython": "3.3.0",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "timing_sizes": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    8,
+    17,
+    32,
+    64,
+    96,
+    128,
+    256,
+    512
+  ],
+  "repeats_up_to_128": 2,
+  "repeats_above_128": 1,
+  "memory_sizes": [
+    1,
+    2,
+    4,
+    8,
+    16,
+    32,
+    64,
+    128,
+    200,
+    256
+  ],
+  "saved_inputs": true,
+  "modules": {
+    "binet_compiled": "D:\\something\\projects\\Matrix-algorithms\\binet_compiled.cp314-win_amd64.pyd",
+    "strassen_compiled": "D:\\something\\projects\\Matrix-algorithms\\strassen_compiled.cp314-win_amd64.pyd",
+    "alphatensor_compiled": "D:\\something\\projects\\Matrix-algorithms\\alphatensor_compiled.cp314-win_amd64.pyd"
+  },
+  "completed_at": "2026-10-14T10:18:23.159671+02:00"
+}
