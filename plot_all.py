@@ -57,7 +57,6 @@ def plot_all(compiled: bool = False) -> None:
             ax.plot(sizes, values, color=color, marker=marker, markersize=5,
                     linewidth=1.6, label=label)
 
-        ax.set_title(title, fontweight="bold", pad=14)
         ax.set_xscale("log", base=2)
         ax.set_yscale("log")
         ax.set_xticks([2**k for k in range(sizes[-1].bit_length())])
@@ -69,11 +68,6 @@ def plot_all(compiled: bool = False) -> None:
         ax.grid(True, which="major", color="#cbd5e1", alpha=0.65)
         ax.grid(True, which="minor", axis="y", color="#cbd5e1", alpha=0.2)
         ax.spines[["top", "right"]].set_visible(False)
-        ax.legend()
-        fig.supxlabel(
-            "Tylko rozmiary zmierzone dla wszystkich metod; linie łączą punkty.\n" + note,
-            fontsize=8,
-        )
         output_path = output_dir / filename
         fig.savefig(output_path, dpi=180)
         plt.close(fig)
