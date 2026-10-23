@@ -6,4 +6,4 @@ build/
 *.py[cod]
 binet_results_before_restart_*.csv
 binet_results_1_100_7_repeats.csv
-plots/binet_time_comparison.png
+lab1/plots/binet_time_comparison.png
