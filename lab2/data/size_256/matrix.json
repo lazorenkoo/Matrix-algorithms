@@ -1,0 +1,8 @@
+{
+  "size": 256,
+  "dtype": "float64",
+  "generator": "PCG64",
+  "seed": 42,
+  "interval": "(1e-8, 1)",
+  "A_sha256": "99ce7109c9de7cf07c1e9714c80e73a461aa6081e96321819965033e96982c9a"
+}

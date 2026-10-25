@@ -36,7 +36,7 @@ class LUTests(unittest.TestCase):
             np.testing.assert_array_equal(L, [[1, 0], [0.5, 1]])
             np.testing.assert_array_equal(U, [[4, 1], [0, 2.5]])
             self.assertEqual((operations.multiplications, operations.additions_subtractions,
-                              operations.divisions, operations.total), (3, 1, 2, 6))
+                              operations.divisions, operations.total), (1, 1, 1, 3))
 
     def test_known_factors(self):
         rng = np.random.default_rng(81)

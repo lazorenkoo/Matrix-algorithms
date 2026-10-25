@@ -16,7 +16,7 @@ class CompiledLUTests(unittest.TestCase):
         import lab2.multiplication_compiled as compiled_multiplication
 
         self.assertIsInstance(compiled_lu.__loader__, importlib.machinery.ExtensionFileLoader)
-        self.assertIs(compiled_lu._inverse, compiled_inverse._inverse)
+        self.assertIs(compiled_lu._ZeroPivotError, compiled_inverse._ZeroPivotError)
         self.assertIs(compiled_lu.multiply, compiled_multiplication.multiply)
         self.assertIs(compiled_lu.get_multiplication, compiled_multiplication.get_multiplication)
 

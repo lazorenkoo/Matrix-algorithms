@@ -19,6 +19,7 @@ FIELDS = [
     "relative_reconstruction_error", "normalized_residual", "lower_triangular",
     "upper_triangular", "unit_lower_diagonal", "matches_reference", "A_sha256",
 ]
+ALGORITHM = "recursive_triangular_solves_tiled_v2"
 
 
 def benchmark(sizes, methods, implementation="compiled", repeats=2, resume=False,
@@ -30,6 +31,9 @@ def benchmark(sizes, methods, implementation="compiled", repeats=2, resume=False
     output_path = output_dir / f"lu_{implementation}.csv"
     completed = {}
     if resume and output_path.exists():
+        implementation_path = output_path.with_suffix(".implementation.json")
+        if not implementation_path.exists() or json.loads(implementation_path.read_text())["algorithm"] != ALGORITHM:
+            raise ValueError("Existing LU measurements use a different algorithm; archive them before restarting.")
         with output_path.open(newline="", encoding="utf-8") as file:
             reader = csv.DictReader(file)
             if reader.fieldnames != FIELDS:
@@ -38,6 +42,8 @@ def benchmark(sizes, methods, implementation="compiled", repeats=2, resume=False
     else:
         with output_path.open("w", newline="", encoding="utf-8") as file:
             csv.DictWriter(file, fieldnames=FIELDS).writeheader()
+        output_path.with_suffix(".implementation.json").write_text(
+            json.dumps({"algorithm": ALGORITHM}, indent=2) + "\n", encoding="utf-8")
 
     started = datetime.now().astimezone()
     metadata = {
@@ -48,6 +54,7 @@ def benchmark(sizes, methods, implementation="compiled", repeats=2, resume=False
         "large_repeats": 1, "large_threshold": 128, "row_permutations": False,
         "relative_error_tolerance": 1e-8, "normalized_residual_tolerance": 1e-10,
         "unary_negations_counted": False, "complete": False,
+        "algorithm": ALGORITHM,
     }
     if implementation == "compiled":
         import Cython

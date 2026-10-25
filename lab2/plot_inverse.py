@@ -9,11 +9,12 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import ScalarFormatter
 
 
-def plot_results(implementation="compiled", task="inverse"):
+def plot_results(implementation="compiled", task="inverse", results_dir=None, output_dir=None):
     root = Path(__file__).parent
-    with (root / "results" / f"{task}_{implementation}.csv").open(newline="", encoding="utf-8") as file:
+    results_dir = Path(results_dir) if results_dir is not None else root / "results"
+    with (results_dir / f"{task}_{implementation}.csv").open(newline="", encoding="utf-8") as file:
         rows = [row for row in csv.DictReader(file) if row["matches_reference"] == "1"]
-    output_dir = root / "plots"
+    output_dir = Path(output_dir) if output_dir is not None else root / "plots"
     output_dir.mkdir(exist_ok=True)
     for field, ylabel, filename in [
         ("time_seconds", "Czas odwracania macierzy [s]" if task == "inverse" else "Czas faktoryzacji LU [s]", "time"),

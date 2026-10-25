@@ -13,12 +13,13 @@ from lab2.matrix_cases import load_matrix
 
 
 def run(sizes, implementation="compiled", repeats=2, time_budget=3600,
-        refinement_steps=1, min_fit_size=32, tasks=("inverse", "lu")):
+        refinement_steps=1, min_fit_size=32, tasks=("inverse", "lu"),
+        output_dir=None, data_dir=None):
     root = Path(__file__).parent
-    results_dir = root / "results"
+    results_dir = Path(output_dir) if output_dir is not None else root / "results"
     results_dir.mkdir(parents=True, exist_ok=True)
     sizes = sorted(set(sizes))
-    checksums = {n: load_matrix(n)[1] for n in sizes}
+    checksums = {n: load_matrix(n, data_dir)[1] for n in sizes}
     started = datetime.now().astimezone()
     metadata = {
         "started_at": started.isoformat(), "implementation": implementation,
@@ -39,7 +40,8 @@ def run(sizes, implementation="compiled", repeats=2, time_budget=3600,
                 print("Time budget reached; saved results can be resumed.", flush=True)
                 break
             methods = ["binet", "strassen", "laderman"] if task == "inverse" else ["binet", "strassen"]
-            kwargs = dict(implementation=implementation, repeats=repeats, resume=True, time_budget=remaining)
+            kwargs = dict(implementation=implementation, repeats=repeats, resume=True, time_budget=remaining,
+                          output_dir=results_dir, data_dir=data_dir)
             if task == "inverse":
                 path = benchmark_inverse(sizes, methods, refinement_steps=refinement_steps, **kwargs)
             else:
@@ -58,8 +60,9 @@ def run(sizes, implementation="compiled", repeats=2, time_budget=3600,
                 with path.open(newline="", encoding="utf-8") as file:
                     has_rows = any(row["matches_reference"] == "1" for row in csv.DictReader(file))
                 if has_rows:
-                    plot_results(implementation=implementation, task=task)
-        estimate(implementation=implementation, min_size=min_fit_size, tasks=tasks)
+                    plot_results(implementation=implementation, task=task, results_dir=results_dir,
+                                 output_dir=results_dir.parent / "plots" if output_dir is not None else root / "plots")
+        estimate(implementation=implementation, min_size=min_fit_size, tasks=tasks, results_dir=results_dir)
         metadata["completed_tasks"] = completed_tasks
         metadata["complete"] = len(completed_tasks) == len(tasks)
     except Exception as error:
@@ -69,6 +72,7 @@ def run(sizes, implementation="compiled", repeats=2, time_budget=3600,
         metadata["finished_at"] = datetime.now().astimezone().isoformat()
         metadata_path.write_text(json.dumps(metadata, indent=2) + "\n", encoding="utf-8")
     print(f"Run complete={metadata['complete']}; results: {results_dir}", flush=True)
+    return metadata_path
 
 
 if __name__ == "__main__":

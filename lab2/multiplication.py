@@ -18,6 +18,30 @@ def strassen_rectangular(A: np.ndarray, B: np.ndarray):
         return multiply_direct(A, B)
     if rows == common == cols:
         return strassen(A, B)
+    block_size = min(rows, common, cols)
+    if max(rows, common, cols) > 2 * block_size:
+        C = np.zeros((rows, cols))
+        multiplications = 0
+        additions = 0
+        for i in range(0, rows, block_size):
+            for j in range(0, cols, block_size):
+                height = min(block_size, rows - i)
+                width = min(block_size, cols - j)
+                for k in range(0, common, block_size):
+                    depth = min(block_size, common - k)
+                    padded_A = np.zeros((block_size, block_size))
+                    padded_B = np.zeros((block_size, block_size))
+                    padded_A[:height, :depth] = A[i:i + height, k:k + depth]
+                    padded_B[:depth, :width] = B[k:k + depth, j:j + width]
+                    part, mul, add = strassen(padded_A, padded_B)
+                    if k == 0:
+                        C[i:i + height, j:j + width] = part[:height, :width]
+                    else:
+                        C[i:i + height, j:j + width] += part[:height, :width]
+                        additions += height * width
+                    multiplications += mul
+                    additions += add
+        return C, multiplications, additions
     size = max(rows, common, cols)
     padded_A = np.zeros((size, size))
     padded_B = np.zeros((size, size))

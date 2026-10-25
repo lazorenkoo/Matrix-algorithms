@@ -37,7 +37,7 @@ class CompiledInverseTests(unittest.TestCase):
             suite = unittest.defaultTestLoader.loadTestsFromTestCase(cases.InverseTests)
             result = unittest.TestResult()
             suite.run(result)
-            self.assertEqual(result.testsRun, 8)
+            self.assertEqual(result.testsRun, 9)
             self.assertTrue(result.wasSuccessful(), result.errors + result.failures)
         finally:
             cases.inverse = original_inverse

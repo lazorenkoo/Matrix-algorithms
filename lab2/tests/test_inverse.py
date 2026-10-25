@@ -73,7 +73,7 @@ class InverseTests(unittest.TestCase):
 
     def test_rectangular_strassen(self):
         rng = np.random.default_rng(7)
-        for rows, common, cols in ((1, 5, 3), (4, 1, 7), (3, 5, 1), (2, 3, 4), (5, 3, 7)):
+        for rows, common, cols in ((1, 5, 3), (4, 1, 7), (3, 5, 1), (2, 3, 4), (5, 4, 7)):
             A = rng.uniform(-1, 1, size=(rows, common))
             B = rng.uniform(-1, 1, size=(common, cols))
             result, mul, add = strassen_rectangular(A, B)
@@ -84,6 +84,20 @@ class InverseTests(unittest.TestCase):
                 size = max(rows, common, cols)
                 _, expected_mul, expected_add = strassen(np.zeros((size, size)), np.zeros((size, size)))
                 self.assertEqual((mul, add), (expected_mul, expected_add))
+
+    def test_thin_tiled_strassen(self):
+        rng = np.random.default_rng(18)
+        for rows, common, cols in ((2, 2, 32), (32, 2, 2), (2, 32, 2),
+                                   (3, 3, 17), (3, 17, 5), (17, 5, 3), (5, 3, 7)):
+            A = rng.uniform(-1, 1, (rows, common))
+            B = rng.uniform(-1, 1, (common, cols))
+            C, mul, add = strassen_rectangular(A, B)
+            np.testing.assert_allclose(C, A @ B, rtol=1e-12, atol=1e-12)
+            block = min(rows, common, cols)
+            _, tile_mul, tile_add = strassen(np.zeros((block, block)), np.zeros((block, block)))
+            tiles = ((rows + block - 1) // block) * ((common + block - 1) // block) * ((cols + block - 1) // block)
+            expected_add = tiles * tile_add + rows * cols * ((common + block - 1) // block - 1)
+            self.assertEqual((mul, add), (tiles * tile_mul, expected_add))
 
 
 if __name__ == "__main__":
