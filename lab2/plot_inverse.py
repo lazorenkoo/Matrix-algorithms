@@ -20,7 +20,8 @@ def plot_results(implementation="compiled"):
         ("flops", "Liczba operacji zmiennoprzecinkowych", "flops"),
     ]:
         fig, ax = plt.subplots(figsize=(9, 5.5), layout="constrained")
-        for method, color, marker in [("binet", "#2563eb", "o"), ("strassen", "#ea580c", "s")]:
+        for method, color, marker in [("binet", "#2563eb", "o"), ("strassen", "#ea580c", "s"),
+                                      ("laderman", "#16a34a", "^")]:
             values = sorted((row for row in rows if row["method"] == method), key=lambda row: int(row["size"]))
             if values:
                 ax.plot([int(row["size"]) for row in values], [float(row[field]) for row in values],

@@ -110,7 +110,7 @@ def benchmark(sizes, methods, implementation="compiled", repeats=2, resume=False
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--sizes", type=int, nargs="+", default=[1, 2, 3, 4, 5, 8, 17, 32, 64, 96, 128])
-    parser.add_argument("--methods", choices=["binet", "strassen"], nargs="+", default=["binet", "strassen"])
+    parser.add_argument("--methods", choices=["binet", "strassen", "laderman"], nargs="+", default=["binet", "strassen"])
     parser.add_argument("--implementation", choices=["python", "compiled"], default="compiled")
     parser.add_argument("--repeats", type=int, default=2)
     parser.add_argument("--resume", action="store_true")

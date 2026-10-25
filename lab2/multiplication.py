@@ -3,9 +3,11 @@ import numpy as np
 if __name__ == "lab2.multiplication_compiled":
     from lab1.binet_compiled import binet
     from lab1.strassen_compiled import multiply_direct, strassen
+    from lab2.laderman_compiled import laderman
 else:
     from lab1.binet import binet
     from lab1.strassen import multiply_direct, strassen
+    from lab2.laderman import laderman
 from lab2.operations import Operations
 
 
@@ -26,7 +28,7 @@ def strassen_rectangular(A: np.ndarray, B: np.ndarray):
 
 
 def get_multiplication(method: str):
-    return {"binet": binet, "strassen": strassen_rectangular}[method]
+    return {"binet": binet, "strassen": strassen_rectangular, "laderman": laderman}[method]
 
 
 def multiply(A: np.ndarray, B: np.ndarray, algorithm, operations: Operations):

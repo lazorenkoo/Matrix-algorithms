@@ -10,7 +10,7 @@ from lab2.multiplication import strassen_rectangular
 class InverseTests(unittest.TestCase):
     def check_inverse(self, A):
         original = A.copy()
-        for method in ("binet", "strassen"):
+        for method in ("binet", "strassen", "laderman"):
             with self.subTest(size=A.shape, method=method):
                 result, operations = inverse(A, method)
                 np.testing.assert_allclose(result, np.linalg.inv(A), rtol=1e-9, atol=1e-9)
@@ -20,14 +20,14 @@ class InverseTests(unittest.TestCase):
                 self.assertGreater(operations.divisions, 0)
 
     def test_scalar(self):
-        for method in ("binet", "strassen"):
+        for method in ("binet", "strassen", "laderman"):
             result, operations = inverse([[0.5]], method)
             np.testing.assert_array_equal(result, [[2.0]])
             self.assertEqual((operations.multiplications, operations.additions_subtractions,
                               operations.divisions, operations.total), (0, 0, 1, 1))
 
     def test_hand_calculation(self):
-        for method in ("binet", "strassen"):
+        for method in ("binet", "strassen", "laderman"):
             result, operations = inverse([[4, 1], [2, 3]], method)
             np.testing.assert_allclose(result, [[0.3, -0.1], [-0.2, 0.4]])
             self.assertEqual((operations.multiplications, operations.additions_subtractions,
@@ -39,7 +39,7 @@ class InverseTests(unittest.TestCase):
             self.check_inverse(rng.uniform(1e-8, 1, size=(size, size)))
 
     def test_refinement_counts(self):
-        for method, expected in (("binet", (22, 18, 2, 42)), ("strassen", (20, 46, 2, 68))):
+        for method, expected in (("binet", (22, 18, 2, 42)), ("strassen", (20, 46, 2, 68)), ("laderman", (22, 18, 2, 42))):
             result, operations = inverse([[4, 1], [2, 3]], method, refinement_steps=1)
             np.testing.assert_allclose(result, [[0.3, -0.1], [-0.2, 0.4]])
             self.assertEqual((operations.multiplications, operations.additions_subtractions,
@@ -63,7 +63,7 @@ class InverseTests(unittest.TestCase):
         ]))
 
     def test_singular_and_invalid_inputs(self):
-        for method in ("binet", "strassen"):
+        for method in ("binet", "strassen", "laderman"):
             for A in ([[0]], [[1, 2], [2, 4]], np.zeros((3, 3))):
                 with self.assertRaises(np.linalg.LinAlgError):
                     inverse(A, method)

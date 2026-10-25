@@ -15,6 +15,7 @@ setup(
         [
             Extension("lab1.binet_compiled", ["lab1/binet.py"]),
             Extension("lab1.strassen_compiled", ["lab1/strassen.py"]),
+            Extension("lab2.laderman_compiled", ["lab2/laderman.py"]),
             Extension("lab2.multiplication_compiled", ["lab2/multiplication.py"]),
             Extension("lab2.inverse_compiled", ["lab2/inverse.py"]),
             Extension("lab2.lu_compiled", ["lab2/lu.py"]),

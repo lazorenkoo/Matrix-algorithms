@@ -19,6 +19,9 @@ class CompiledInverseTests(unittest.TestCase):
             self.assertIsInstance(module.__loader__, importlib.machinery.ExtensionFileLoader)
         self.assertIs(compiled_inverse.multiply, compiled_multiplication.multiply)
         self.assertIs(compiled_inverse.get_multiplication, compiled_multiplication.get_multiplication)
+        import lab2.laderman_compiled as compiled_laderman
+
+        self.assertIs(compiled_multiplication.laderman, compiled_laderman.laderman)
         self.assertIs(compiled_multiplication.binet, compiled_binet.binet)
         self.assertIs(compiled_multiplication.strassen, compiled_strassen.strassen)
         self.assertIs(compiled_multiplication.multiply_direct, compiled_strassen.multiply_direct)
@@ -47,7 +50,7 @@ class CompiledInverseTests(unittest.TestCase):
         matrices = [rng.uniform(1e-8, 1, (n, n)) for n in range(1, 18)]
         matrices += [np.roll(np.eye(5), 1, axis=0)]
         for A in matrices:
-            for method in ("binet", "strassen"):
+            for method in ("binet", "strassen", "laderman"):
                 expected, operations = inverse(A, method)
                 actual, compiled_operations = compiled_inverse.inverse(A, method)
                 np.testing.assert_array_equal(actual, expected)
