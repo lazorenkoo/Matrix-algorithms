@@ -1,0 +1,602 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[polish]{babel}
+\usepackage{lmodern}
+\usepackage[a4paper,margin=24mm,headheight=15pt]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs,tabularx}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{microtype}
+\usepackage{fancyhdr}
+\usepackage{caption}
+\usepackage[section]{placeins}
+\usepackage{hyperref}
+
+\definecolor{accent}{HTML}{1D4ED8}
+\definecolor{codebg}{HTML}{F3F6FA}
+\hypersetup{colorlinks=true,linkcolor=accent,urlcolor=accent,citecolor=accent}
+\captionsetup{font=small,labelfont=bf}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+\setlength{\emergencystretch}{2em}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small Algorytmy macierzowe}
+\fancyhead[R]{\small Laboratorium 1}
+\fancyfoot[C]{\thepage}
+\lstset{basicstyle=\ttfamily\footnotesize,backgroundcolor=\color{codebg},
+  keywordstyle=\color{accent}\bfseries,frame=single,rulecolor=\color{black!12},
+  breaklines=true,columns=fullflexible,keepspaces=true,showstringspaces=false,
+  xleftmargin=4pt,xrightmargin=4pt,aboveskip=9pt,belowskip=9pt}
+
+\newcommand{\autorzy}{Imię i nazwisko 1, Imię i nazwisko 2}
+\newcommand{\grupa}{Numer grupy}
+\newcommand{\dataoddania}{Data oddania}
+\newcommand{\wykres}[3]{
+  \begin{figure}[htbp]
+    \centering
+    \IfFileExists{plots/#1}{\includegraphics[width=0.97\linewidth]{plots/#1}}{
+      \fbox{\parbox[c][45mm][c]{0.9\linewidth}{\centering
+      Brak pliku wykresu: \texttt{\detokenize{#1}}}}}
+    \caption{#2}\label{#3}
+  \end{figure}}
+
+\begin{document}
+
+\begin{center}
+  {\small Akademia Górniczo-Hutnicza w Krakowie}\par
+  \vspace{8mm}
+  {\Large\bfseries Algorytmy macierzowe}\par
+  \vspace{3mm}
+  {\LARGE\bfseries Rekurencyjne mnożenie macierzy}\par
+  \vspace{3mm}
+  {\large Binét, Strassen i AlphaTensor}\par
+  \vspace{7mm}
+  \autorzy\par
+  Grupa: \grupa\quad |\quad \dataoddania
+\end{center}
+\vspace{5mm}
+
+\begin{tabularx}{\linewidth}{@{}lX@{}}
+\toprule
+Procesor & AMD Ryzen 5 5500, 6 rdzeni, 12 wątków \\
+Pamięć RAM & 16 GB \\
+Karta graficzna & AMD Radeon RX 6700 XT, 12 GB VRAM \\
+System & Windows 11 Home, 64-bit \\
+Kompilacja & Python 3.14.4, Cython 3.3.0, MSVC 14.50; moduły \texttt{.pyd} \\
+Weryfikacja & GNU Octave; dodatkowo NumPy \\
+\bottomrule
+\end{tabularx}
+
+\vspace{4mm}
+\textbf{Status danych.} Implementacje zostały skompilowane i przetestowane.
+Pełne pomiary modułów Cython nie zostały jeszcze wykonane.
+Wykresy i tabele w tej wersji przedstawiają wcześniejsze pomiary zwykłych
+modułów Python. Parametry środowiska powyżej opisują komputer i aktualną
+konfigurację kompilacji; nie stanowią potwierdzenia wersji środowiska
+każdego wcześniejszego pomiaru.
+
+\tableofcontents
+\newpage
+
+\section{Cel i zakres ćwiczenia}
+Celem ćwiczenia jest implementacja rekurencyjnych metod mnożenia macierzy,
+weryfikacja poprawności oraz porównanie czasu, liczby operacji arytmetycznych
+i szczytu śledzonych alokacji pamięci.
+Wspólne testy wydajności dotyczą macierzy kwadratowych $n\times n$.
+Binét i AlphaTensor dodatkowo obsługują zgodne macierze prostokątne.
+
+Zaimplementowano algorytmy Binéta, Strassena oraz metodę wykorzystującą
+faktoryzację AlphaTensor dla iloczynu $4\times5$ przez $5\times5$.
+Pierwotna treść zestawu wymienia w punkcie trzecim metodę Ladermana.
+AlphaTensor stanowi wybrany wariant tego punktu; zakres tej zamiany
+należy uzgodnić z prowadzącym przed oddaniem sprawozdania.
+
+Elementy macierzy wejściowych losowane są z przedziału otwartego
+$(10^{-8},1)$ i przechowywane jako liczby zmiennoprzecinkowe
+podwójnej precyzji. Skrajne wartości przedziału wykluczono przez
+\texttt{np.nextafter}. Macierze do wspólnych porównań zapisano w CSV,
+stosując generator PCG64 i ziarno 42. Kolejne metody wczytują te same
+pliki zamiast ponownie losować dane.
+
+\section{Implementacja i kompilacja}
+Kod algorytmów zapisano w składni Python. Cython tłumaczy pliki źródłowe
+na C, a kompilator MSVC tworzy natywne moduły rozszerzeń \texttt{.pyd}.
+Skrypty uruchamiające pomiary i tworzące wykresy pozostają skryptami Python.
+Nie twierdzimy zatem, że Python jako język przestał być interpretowany;
+skompilowane są moduły realizujące badane algorytmy.
+
+\begin{lstlisting}[language=Python,caption={Przykład konfiguracji kompilacji Binéta.}]
+setup(
+    name="binet_compiled",
+    ext_modules=cythonize(
+        [Extension("binet_compiled", ["binet.py"])],
+        compiler_directives={"language_level": 3},
+        build_dir="build/cython",
+    ),
+)
+\end{lstlisting}
+
+\begin{lstlisting}[caption={Polecenia budowania trzech modułów.}]
+python setup_binet.py build_ext --inplace
+python setup_strassen.py build_ext --inplace
+python setup_alphatensor.py build_ext --inplace
+\end{lstlisting}
+
+Moduł AlphaTensor korzysta ze skompilowanej funkcji
+\texttt{multiply\_direct} z modułu \texttt{strassen\_compiled}.
+Kompilacja nie zmienia wzorów ani liczby zliczanych operacji.
+Nie zastosowano dodatkowych deklaracji typów C dla wszystkich zmiennych,
+więc część operacji nadal korzysta z obiektów Python i biblioteki NumPy.
+Sam fakt kompilacji nie gwarantuje określonego przyspieszenia.
+Obliczenia nie wykorzystują GPU.
+
+\section{Model zliczania operacji}
+Każde mnożenie dwóch skalarów oraz każde binarne dodawanie lub odejmowanie
+liczymy jako jedną operację. Funkcje zwracają trójkę
+$(C,M,S)$: wynik, liczbę mnożeń oraz liczbę dodawań i odejmowań.
+Łączna liczba operacji wynosi
+\[
+  F=M+S.
+\]
+Nie wykonujemy dzieleń zmiennoprzecinkowych w badanych algorytmach.
+Nie zliczamy przypisań, indeksowania, alokacji, kopiowania ani operacji
+całkowitoliczbowych na indeksach. W AlphaTensor nie liczymy osobno
+jednoargumentowej zmiany znaku; binarne odejmowanie jest zliczane.
+Operacje na zerach dodanych przy dopełnianiu macierzy są uwzględniane.
+
+Dodanie dwóch bloków o rozmiarze $r\times s$ oznacza $rs$ dodawań
+liczb. Dlatego po złożeniu wyniku Binéta sumujemy także rozmiary
+bloków $C_{11},C_{12},C_{21},C_{22}$.
+
+\begin{lstlisting}[language=Python,caption={Zliczanie dodawań w jednym kroku Binéta.}]
+additions = (
+    add1 + add2 + add3 + add4
+    + add5 + add6 + add7 + add8
+    + C11.size + C12.size + C21.size + C22.size
+)
+\end{lstlisting}
+
+\section{Algorytm Binéta}
+\subsection{Podział na bloki i pseudokod}
+Dla zgodnych podziałów macierzy
+\[
+A=\begin{bmatrix}A_{11}&A_{12}\\A_{21}&A_{22}\end{bmatrix},\qquad
+B=\begin{bmatrix}B_{11}&B_{12}\\B_{21}&B_{22}\end{bmatrix}
+\]
+wyznaczamy osiem iloczynów rekurencyjnie i tworzymy cztery bloki wyniku:
+\begin{align*}
+C_{11}&=A_{11}B_{11}+A_{12}B_{21}, &
+C_{12}&=A_{11}B_{12}+A_{12}B_{22},\\
+C_{21}&=A_{21}B_{11}+A_{22}B_{21}, &
+C_{22}&=A_{21}B_{12}+A_{22}B_{22}.
+\end{align*}
+
+\begin{lstlisting}[caption={Pseudokod Binéta dla zgodnych macierzy prostokątnych.}]
+Binet(A, B):
+    (r, k) = rozmiar(A)
+    s = liczba_kolumn(B)
+    if r == 1 or k == 1 or s == 1:
+        return mnozenie_bezposrednie(A, B)
+    podziel A i B w polowie kazdego wymiaru
+    C11 = Binet(A11, B11) + Binet(A12, B21)
+    C12 = Binet(A11, B12) + Binet(A12, B22)
+    C21 = Binet(A21, B11) + Binet(A22, B21)
+    C22 = Binet(A21, B12) + Binet(A22, B22)
+    zsumuj liczniki wywolan oraz dodawan blokow
+    return polacz(C11, C12, C21, C22), M, S
+\end{lstlisting}
+
+\subsection{Dowolne rozmiary}
+Każdy wymiar dzielimy na części o długościach $\lfloor d/2\rfloor$
+i $\lceil d/2\rceil$. Nie dopełniamy macierzy zerami.
+Wymiar wspólny jest dzielony w tym samym miejscu dla kolumn $A$
+i wierszy $B$, co zachowuje zgodność iloczynów blokowych.
+Gdy którykolwiek wymiar osiągnie 1, wykonujemy mnożenie bezpośrednie.
+
+\begin{lstlisting}[language=Python,caption={Podział o nierównych rozmiarach bloków.}]
+mid_rows = rows // 2
+mid_common = common // 2
+mid_cols = cols // 2
+A11 = A[:mid_rows, :mid_common]
+A12 = A[:mid_rows, mid_common:]
+B11 = B[:mid_common, :mid_cols]
+B21 = B[mid_common:, :mid_cols]
+P1, mul1, add1 = binet(A11, B11)
+P2, mul2, add2 = binet(A12, B21)
+C11 = P1 + P2
+\end{lstlisting}
+
+\subsection{Złożoność}
+Dla $A\in\mathbb{R}^{r\times k}$, $B\in\mathbb{R}^{k\times s}$
+zastosowana implementacja wykonuje dokładnie
+\[
+ M=rks,\qquad S=rs(k-1).
+\]
+Dla kwadratowych macierzy $M=n^3$, $S=n^2(n-1)$,
+a $F=2n^3-n^2$. Rekurencja dla $n=2^j$ ma postać
+$T(n)=8T(n/2)+\Theta(n^2)$, więc $T(n)=\Theta(n^3)$.
+
+\section{Algorytm Strassena}
+\subsection{Siedem iloczynów zamiast ośmiu}
+Dla parzystego $n$ dzielimy obie macierze na równe bloki i wyznaczamy
+\begin{align*}
+P_1&=(A_{11}+A_{22})(B_{11}+B_{22}),\\
+P_2&=(A_{21}+A_{22})B_{11}, & P_3&=A_{11}(B_{12}-B_{22}),\\
+P_4&=A_{22}(B_{21}-B_{11}), & P_5&=(A_{11}+A_{12})B_{22},\\
+P_6&=(A_{21}-A_{11})(B_{11}+B_{12}),\\
+P_7&=(A_{12}-A_{22})(B_{21}+B_{22}).
+\end{align*}
+Bloki wyniku obliczamy następująco:
+\begin{align*}
+C_{11}&=P_1+P_4-P_5+P_7, & C_{12}&=P_3+P_5,\\
+C_{21}&=P_2+P_4, & C_{22}&=P_1-P_2+P_3+P_6.
+\end{align*}
+
+\begin{lstlisting}[caption={Pseudokod Strassena dla dowolnego dodatniego rozmiaru kwadratowego.}]
+Strassen(A, B):
+    n = liczba_wierszy(A)
+    if n == 1:
+        return A * B, 1, 0
+    if n jest nieparzyste:
+        return StrassenOdd(A, B)
+    podziel A i B na cztery rowne bloki
+    oblicz P1,...,P7 wedlug podanych wzorow
+        kazdy iloczyn przez Strassen
+    oblicz C11,...,C22 i polacz bloki
+    M = suma licznikow mnozen siedmiu wywolan
+    S = suma licznikow dodawan + 18 * (n/2)^2
+    return C, M, S
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python,caption={Fragment implementacji siedmiu iloczynów.}]
+P1, mul1, add1 = strassen(A11 + A22, B11 + B22)
+P2, mul2, add2 = strassen(A21 + A22, B11)
+P3, mul3, add3 = strassen(A11, B12 - B22)
+P4, mul4, add4 = strassen(A22, B21 - B11)
+P5, mul5, add5 = strassen(A11 + A12, B22)
+P6, mul6, add6 = strassen(A21 - A11, B11 + B12)
+P7, mul7, add7 = strassen(A12 - A22, B21 + B22)
+C11 = P1 + P4 - P5 + P7
+C22 = P1 - P2 + P3 + P6
+\end{lstlisting}
+
+\subsection{Nieparzyste rozmiary bez dopełniania zerami}
+Dla nieparzystego $n>1$ oddzielamy ostatni wiersz i kolumnę:
+\[
+A=\begin{bmatrix}A_0&a\\r&\alpha\end{bmatrix},\qquad
+B=\begin{bmatrix}B_0&b\\s&\beta\end{bmatrix}.
+\]
+Macierze $A_0,B_0$ mają parzysty rozmiar $(n-1)\times(n-1)$.
+Tylko iloczyn $A_0B_0$ liczymy rekurencyjnie metodą Strassena.
+Iloczyny z udziałem wektorów i skalarów wykonujemy bezpośrednio:
+\[
+AB=\begin{bmatrix}
+ A_0B_0+as & A_0b+a\beta\\
+ rB_0+\alpha s & rb+\alpha\beta
+\end{bmatrix}.
+\]
+
+\begin{lstlisting}[caption={Pseudokod obsługi nieparzystego rozmiaru.}]
+StrassenOdd(A, B):
+    oddziel ostatni wiersz i kolumne A oraz B
+    P = Strassen(A0, B0)
+    C11 = P + Direct(a, s)
+    C12 = Direct(A0, b) + Direct(a, beta)
+    C21 = Direct(r, B0) + Direct(alpha, s)
+    C22 = Direct(r, b) + Direct(alpha, beta)
+    zsumuj liczniki i dodawania blokow
+    return polacz(C11, C12, C21, C22), M, S
+\end{lstlisting}
+
+\subsection{Złożoność i liczba operacji}
+Dla $n=2^j$ zachodzi
+\[
+ T(n)=7T(n/2)+\Theta(n^2),\qquad
+ T(n)=\Theta(n^{\log_2 7})\approx\Theta(n^{2{,}8074}).
+\]
+Przy zejściu do skalarów liczba operacji jest równa
+\[
+ M=7^j,\qquad S=6(7^j-4^j).
+\]
+Dla nieparzystego $n=m+1$ dodatkowe iloczyny i sumy dają
+\[
+ M(n)=M(m)+3m^2+3m+1,\qquad
+ S(n)=S(m)+3m^2+m.
+\]
+Koszt wydzielenia brzegu jest kwadratowy, więc nie zmienia dominującej
+złożoności. Redukcja liczby mnożeń nie oznacza, że łączna liczba FLOPs
+będzie mniejsza dla każdego badanego rozmiaru.
+
+\section{Algorytm oparty na AlphaTensor}
+\subsection{Faktoryzacja i sposób obliczeń}
+Wykorzystujemy opublikowaną faktoryzację nad liczbami rzeczywistymi
+dla iloczynu $4\times5$ przez $5\times5$, o randze 76\cite{alphatensor,data}.
+Model AlphaTensor nie jest uruchamiany podczas mnożenia macierzy.
+Program korzysta z zapisanych współczynników $U,V,W\in\{-1,0,1\}$.
+
+Po podziale $A$ na 20 bloków, a $B$ na 25 bloków wyznaczamy
+\[
+ L_t=\sum_i U_{it}A_i,\quad R_t=\sum_j V_{jt}B_j,\quad
+ H_t=L_tR_t\quad(t=1,\ldots,76),
+\]
+a następnie 20 bloków wyjściowych
+$C_\ell=\sum_t W_{\ell t}H_t$.
+Współczynniki zerowe pomijamy. Współczynnik $-1$ obsługujemy zmianą
+znaku lub odejmowaniem, a nie dodatkowym mnożeniem przez $-1$.
+Indeksy tablicy $W$ przestawiono tak, aby uzyskać wynik $AB$,
+zamiast transponowanej konwencji danych źródłowych.
+
+\begin{lstlisting}[caption={Pseudokod rekurencyjnego AlphaTensor.}]
+AlphaTensor(A, B):
+    (r, k) = rozmiar(A)
+    s = liczba_kolumn(B)
+    if r < 4 or k < 5 or s < 5:
+        return Direct(A, B)
+    dopelnij r do wielokrotnosci 4
+    dopelnij k i s do wielokrotnosci 5
+    podziel A na 4 x 5 blokow, B na 5 x 5 blokow
+    for t = 1,...,76:
+        L = kombinacja blokow A wedlug U[:,t]
+        R = kombinacja blokow B wedlug V[:,t]
+        H[t] = AlphaTensor(L, R)
+    zloz 20 blokow wyniku wedlug W
+    przytnij wynik do r x s
+    return C, suma_mnozen, suma_dodawan_i_odejmowan
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python,caption={Wykorzystanie współczynników w implementacji.}]
+for left_terms, right_terms in zip(U, V):
+    left, left_ops = combine(A_blocks, left_terms)
+    right, right_ops = combine(B_blocks, right_terms)
+    product, mul, add = alphatensor(left, right)
+    products.append(product)
+    multiplications += mul
+    additions += left_ops + right_ops + add
+\end{lstlisting}
+
+\subsection{Dowolne rozmiary i interpretacja złożoności}
+Dopełnianie jest wykonywane osobno na każdym poziomie rekurencji:
+\[
+r'=4\lceil r/4\rceil,\qquad k'=5\lceil k/5\rceil,
+\qquad s'=5\lceil s/5\rceil.
+\]
+Dodane zera nie zmieniają właściwego iloczynu po przycięciu wyniku,
+ale zwiększają koszt i powodują skoki liczby operacji.
+
+Dla skalarnego jądra $4\times5$ przez $5\times5$ otrzymujemy
+76 mnożeń i 549 binarnych dodawań lub odejmowań.
+Zwykłe mnożenie tego samego przykładu wymaga 100 mnożeń i 80 dodawań.
+Mniejsza liczba mnożeń nie oznacza zatem mniejszej sumy operacji.
+
+Dla specjalnej rodziny wymiarów $4^j\times5^j$ przez $5^j\times5^j$
+nie ma dopełniania i liczba mnożeń wynosi $76^j$.
+Po podstawieniu $N=5^j$ daje to $N^{\log_5 76}\approx N^{2{,}691}$,
+ale liczba wierszy wynosi wtedy $4^j$, a nie $N$.
+Nie traktujemy tego wykładnika jako dowodu złożoności dla macierzy
+kwadratowych $N\times N$. W ich przypadku głębokość zależy od
+najszybciej malejących wymiarów dzielonych przez 5, a koszt liści
+także od wymiaru wierszy dzielonego przez 4.
+Wyniki kwadratowe oceniamy na podstawie rzeczywiście zliczonych operacji.
+
+\section{Metodyka badań}
+\subsection{Czas, pamięć i zakres rozmiarów}
+Czas mierzymy funkcją \texttt{perf\_counter} wyłącznie wokół wywołania
+algorytmu. Losowanie, wczytywanie, zapis oraz porównanie z Octave odbywają
+się poza mierzonym odcinkiem. Dla kilku powtórzeń raportujemy medianę.
+Nie wykonujemy pomiaru czasu równocześnie ze śledzeniem pamięci.
+W AlphaTensor dane współczynników ładowane są przed pomiarem.
+
+Historyczny zbiór Binéta zawiera rozmiary 1--128 oraz
+160, 200, 256, 320, 384 i 512. Dla Strassena i AlphaTensor zbadano
+rozmiary 1, 2, 3, 4, 5, 8, 17, 32, 64, 96, 128, 256 i 512.
+Dla obu tych metod wykonywano 5 powtórzeń do 32, 3 do 128 i 1 powyżej 128.
+W Binécie do 100 wykonywano 7 powtórzeń, do 200 po 3,
+a dla większych rozmiarów po jednym.
+Maksymalny zmierzony rozmiar wynosi 512; nie przedstawiamy
+tych danych jako pełnego pomiaru wszystkich rozmiarów 1--1000.
+
+Binét był pierwotnie mierzony na innych losowych parach i w osobnej sesji.
+Strassen i AlphaTensor korzystały z tych samych zapisanych wejść.
+Dlatego historyczne czasy pozwalają na orientacyjne porównanie,
+a nie na kontrolowany pomiar przyspieszenia względem Binéta.
+Nowe skrypty dla modułów Cython wczytują wspólne zapisane macierze
+i zapisują wyniki w osobnych plikach z przyrostkiem \texttt{\_compiled}.
+
+Pamięć badamy osobno dla rozmiarów
+1, 2, 4, 8, 16, 32, 64, 128, 200 i 256.
+Pole \texttt{peak\_traced\_memory\_mib} oznacza szczyt alokacji widocznych
+dla \texttt{tracemalloc} podczas mnożenia. Nie jest to całkowita pamięć
+procesu ani bezpośredni pomiar wszystkich alokacji natywnego kodu.
+Macierze wejściowe i pamięć cache współczynników są tworzone wcześniej.
+Pole \texttt{input\_buffers\_mib} opisuje osobno same bufory $A$ i $B$:
+\[
+ I=\frac{A.\texttt{nbytes}+B.\texttt{nbytes}}{2^{20}}
+   =\frac{16n^2}{2^{20}}\ \text{MiB}
+\]
+dla dwóch macierzy kwadratowych typu float64.
+
+\subsection{Weryfikacja}
+Wyniki porównujemy element po elemencie z iloczynem \texttt{A*B}
+w GNU Octave. Stosujemy warunek
+\[
+ |C_{ij}-C^{\mathrm{ref}}_{ij}|
+ \le 10^{-12}+10^{-12}|C^{\mathrm{ref}}_{ij}|.
+\]
+Raportujemy także $E_{\max}=\max_{i,j}|C_{ij}-C^{\mathrm{ref}}_{ij}|$.
+Bezwzględny błąd większy od $10^{-12}$ nie musi oznaczać niepowodzenia,
+ponieważ warunek uwzględnia również tolerancję względną.
+
+Wersje skompilowane porównano z oryginałami dla rozmiarów 1--33 i 64:
+wyniki oraz liczniki były zgodne. Testy AlphaTensor obejmują dodatkowo
+wszystkie 500 par macierzy bazowych jądra, rekurencyjny przykład
+$16\times25$ przez $25\times25$ oraz przypadki prostokątne i wektorowe.
+
+\section{Wyniki dotychczasowych pomiarów}
+\subsection{Wspólne wykresy}
+Poniższe wykresy przedstawiają \textbf{wersje Python przed kompilacją}.
+Na wspólnych wykresach pokazano tylko rozmiary zmierzone dla wszystkich
+trzech metod. Obie osie są logarytmiczne. Odcinki łączą próbki;
+nie oznaczają pomiaru każdego rozmiaru pomiędzy nimi.
+Przy zależności $t\approx cn^p$ wykres log--log ma postać
+$\log t\approx\log c+p\log n$, czyli w przybliżeniu liniową.
+
+\wykres{comparison_time.png}{Historyczne porównanie czasu wykonania trzech metod.}{fig:time}
+\wykres{comparison_flops.png}{Liczba mnożeń oraz binarnych dodawań i odejmowań.}{fig:flops}
+\wykres{comparison_memory.png}{Szczyt śledzonych alokacji; bufory wejściowe nie są uwzględnione.}{fig:memory}
+\FloatBarrier
+
+\subsection{Wybrane wartości}
+\begin{table}[htbp]
+\centering\small
+\begin{tabular}{@{}rrrr@{}}
+\toprule
+$n$ & Binét [s] & Strassen [s] & AlphaTensor [s]\\
+\midrule
+128 & 7,080 & 4,023 & 6,712\\
+256 & 56,590 & 29,380 & 12,820\\
+512 & 429,224 & 210,828 & 357,719\\
+\bottomrule
+\end{tabular}
+\caption{Historyczne czasy wersji Python. Dla 256 i 512 wykonano po jednym pomiarze.}
+\end{table}
+
+\begin{table}[htbp]
+\centering\small
+\begin{tabular}{@{}rrrr@{}}
+\toprule
+$n$ & Binét [FLOPs] & Strassen [FLOPs] & AlphaTensor [FLOPs]\\
+\midrule
+128 & 4\,177\,920 & 5\,666\,497 & 20\,204\,136\\
+256 & 33\,488\,896 & 39\,960\,391 & 69\,267\,736\\
+512 & 268\,173\,312 & 280\,902\,385 & 604\,962\,586\\
+\bottomrule
+\end{tabular}
+\caption{Zliczone operacje arytmetyczne. Kompilacja nie zmienia tych liczników.}
+\end{table}
+
+\begin{table}[htbp]
+\centering\small
+\begin{tabular}{@{}lrr@{}}
+\toprule
+Metoda & Szczyt śledzonych alokacji [MiB] & Bufory wejściowe [MiB]\\
+\midrule
+Binét & 2,504 & 1,000\\
+Strassen & 2,379 & 1,000\\
+AlphaTensor & 3,749 & 1,000\\
+\bottomrule
+\end{tabular}
+\caption{Historyczne pomiary pamięci dla $n=256$.}
+\end{table}
+
+W AlphaTensor liczba poziomów rekurencji i wielkość dopełnienia zależą
+od wymiaru macierzy. To wyjaśnia nierówny wzrost kosztu i zmianę relacji
+czasów pomiędzy 128, 256 i 512. Wyniku dla pojedynczego rozmiaru
+nie można przenosić na wszystkie pozostałe.
+
+Strassen dla $n=512$ wykonuje około 40,35 mln mnożeń, podczas gdy Binét
+około 134,22 mln. Jednak dodatkowe sumy powodują, że Strassen ma tutaj
+większą łączną liczbę operacji. Czasy zależą także od kosztu wywołań,
+rozmiarów bloków i operacji NumPy, więc nie wynikają wyłącznie z sumy FLOPs.
+
+\section{Przykład i porównanie z GNU Octave}
+Dla zapisanego przypadku $4\times4$ otrzymano poniższe macierze.
+Wartości w sprawozdaniu zaokrąglono do sześciu miejsc; porównanie
+wykonano na pełnej precyzji plików CSV.
+\[
+A=\begin{bmatrix}
+0.773956&0.438878&0.858598&0.697368\\
+0.094177&0.975622&0.761140&0.786064\\
+0.128114&0.450386&0.370798&0.926765\\
+0.643865&0.822762&0.443414&0.227239
+\end{bmatrix},
+\]
+\[
+B=\begin{bmatrix}
+0.554585&0.063817&0.827631&0.631664\\
+0.758088&0.354526&0.970698&0.893121\\
+0.778383&0.194639&0.466721&0.043804\\
+0.154290&0.683049&0.744762&0.967510
+\end{bmatrix}.
+\]
+Wynik referencyjny wynosi
+\[
+C^{\mathrm{ref}}=\begin{bmatrix}
+1.537848&0.848438&1.986668&1.593172\\
+1.505577&1.036961&1.965650&1.724703\\
+0.844095&0.873047&1.406498&1.396071\\
+1.361010&0.574301&1.707725&1.380811
+\end{bmatrix}.
+\]
+
+\begin{lstlisting}[caption={Odtworzenie przykładu w GNU Octave.}]
+A = dlmread('comparison/size_4/A.csv', ',');
+B = dlmread('comparison/size_4/B.csv', ',');
+C = A * B;
+R = dlmread('comparison/size_4/C_strassen.csv', ',');
+max_error = max(abs(C(:) - R(:)));
+matches = all(abs(C(:) - R(:)) <= 1e-12 + 1e-12 * abs(C(:)));
+\end{lstlisting}
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{@{}lrr@{}}
+\toprule
+Metoda & $E_{\max}$, $n=4$ & $E_{\max}$, $n=512$\\
+\midrule
+Binét & $2{,}22\cdot10^{-16}$ & $1{,}14\cdot10^{-13}$\\
+Strassen & $6{,}66\cdot10^{-16}$ & $4{,}39\cdot10^{-11}$\\
+AlphaTensor & $2{,}22\cdot10^{-16}$ & $3{,}50\cdot10^{-12}$\\
+\bottomrule
+\end{tabular}
+\caption{Maksymalny błąd bezwzględny wcześniejszych wyników względem Octave.
+Wszystkie przypadki spełniają przyjęte kryterium tolerancji.}
+\end{table}
+
+Porównanie wykonano dla 13 rozmiarów od 1 do 512.
+Dla $n=4$ AlphaTensor używa jeszcze mnożenia bezpośredniego;
+jądro 76 iloczynów uruchamia się dopiero po spełnieniu progów wymiarów.
+Weryfikacja poprawności obejmuje zatem także większe macierze.
+
+\section{Wnioski i dalsze pomiary}
+Binét daje prostą implementację o dokładnie znanej liczbie operacji
+i złożoności sześciennej. Nierówne bloki pozwalają obsłużyć także
+nieparzyste i prostokątne wymiary bez dopełniania.
+
+Strassen zmniejsza liczbę mnożeń kosztem większej liczby sum i różnic.
+Wydzielenie ostatniego wiersza i kolumny zapewnia obsługę nieparzystych
+rozmiarów bez zmiany dominującej złożoności $\Theta(n^{\log_2 7})$.
+
+AlphaTensor wykorzystuje 76 iloczynów zamiast 100 w jądrze prostokątnym.
+W naszej implementacji koszt kombinacji liniowych i dopełniania
+wpływa istotnie na czas, liczbę FLOPs i pamięć.
+Metoda nie jest najszybsza dla każdego zmierzonego rozmiaru.
+
+Przed końcowym porównaniem wersji skompilowanych należy wykonać wspólny
+przebieg na zapisanych macierzach, uzupełnić zakres pomiarów i zastąpić
+historyczne wykresy. Dopiero te dane pozwolą ocenić wpływ kompilacji
+bez mieszania obu wariantów programu.
+
+\begin{thebibliography}{9}
+\bibitem{alphatensor}
+A. Fawzi i in., \emph{Discovering faster matrix multiplication algorithms
+with reinforcement learning}, Nature 610, 47--53, 2022.
+\url{https://doi.org/10.1038/s41586-022-05172-4}.
+\bibitem{data}
+Google DeepMind, \emph{AlphaTensor: factorizations over the reals}.
+\url{https://github.com/google-deepmind/alphatensor}.
+Wykorzystano klucz $(4,5,5)$ z pliku \texttt{factorizations\_r.npz},
+commit \texttt{1949163da3bef7e3eb268a3ac015fd1c2dbfc767}.
+Dane: CC BY 4.0; wyodrębniono tablice i zmieniono indeksowanie $W$.
+\bibitem{cython}
+Dokumentacja Cython, \emph{Building Cython code}.
+\url{https://docs.cython.org/en/latest/src/quickstart/build.html}.
+\bibitem{repo}
+Kod i dane projektu.
+\url{https://github.com/lazorenkoo/Matrix-algorithms}.
+\end{thebibliography}
+
+\end{document}
