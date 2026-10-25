@@ -73,15 +73,22 @@ def _inverse(A: np.ndarray, algorithm, operations: Operations):
     ])
 
 
-def inverse(A: np.ndarray, method: str = "binet") -> tuple[np.ndarray, Operations]:
+def inverse(A: np.ndarray, method: str = "binet", refinement_steps: int = 0) -> tuple[np.ndarray, Operations]:
     A = np.asarray(A, dtype=np.float64)
     if A.ndim != 2 or A.shape[0] == 0 or A.shape[0] != A.shape[1]:
         raise ValueError("Expected a nonempty square matrix.")
     if not np.isfinite(A).all():
         raise ValueError("Matrix entries must be finite.")
+    if not isinstance(refinement_steps, int) or refinement_steps < 0:
+        raise ValueError("Refinement steps must be a nonnegative integer.")
     algorithm = get_multiplication(method)
     operations = Operations()
     result = _inverse(A, algorithm, operations)
+    for _ in range(refinement_steps):
+        residual = np.eye(A.shape[0]) - multiply(A, result, algorithm, operations)
+        operations.additions_subtractions += residual.size
+        result = result + multiply(result, residual, algorithm, operations)
+        operations.additions_subtractions += result.size
     if not np.isfinite(result).all():
         raise np.linalg.LinAlgError("The inverse cannot be represented with finite float64 values.")
     return result, operations

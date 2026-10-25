@@ -38,6 +38,13 @@ class InverseTests(unittest.TestCase):
         for size in range(1, 20):
             self.check_inverse(rng.uniform(1e-8, 1, size=(size, size)))
 
+    def test_refinement_counts(self):
+        for method, expected in (("binet", (22, 18, 2, 42)), ("strassen", (20, 46, 2, 68))):
+            result, operations = inverse([[4, 1], [2, 3]], method, refinement_steps=1)
+            np.testing.assert_allclose(result, [[0.3, -0.1], [-0.2, 0.4]])
+            self.assertEqual((operations.multiplications, operations.additions_subtractions,
+                              operations.divisions, operations.total), expected)
+
     def test_well_conditioned_matrices(self):
         rng = np.random.default_rng(14)
         for size in (3, 5, 8, 11, 16, 17):
