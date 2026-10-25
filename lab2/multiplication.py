@@ -1,7 +1,11 @@
 import numpy as np
 
-from lab1.binet import binet
-from lab1.strassen import multiply_direct, strassen
+if __name__ == "lab2.multiplication_compiled":
+    from lab1.binet_compiled import binet
+    from lab1.strassen_compiled import multiply_direct, strassen
+else:
+    from lab1.binet import binet
+    from lab1.strassen import multiply_direct, strassen
 from lab2.operations import Operations
 
 

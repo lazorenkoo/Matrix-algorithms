@@ -1,6 +1,9 @@
 import numpy as np
 
-from lab2.multiplication import get_multiplication, multiply
+if __name__ == "lab2.inverse_compiled":
+    from lab2.multiplication_compiled import get_multiplication, multiply
+else:
+    from lab2.multiplication import get_multiplication, multiply
 from lab2.operations import Operations
 
 
