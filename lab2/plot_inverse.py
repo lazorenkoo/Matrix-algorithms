@@ -9,20 +9,21 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import ScalarFormatter
 
 
-def plot_results(implementation="compiled"):
+def plot_results(implementation="compiled", task="inverse"):
     root = Path(__file__).parent
-    with (root / "results" / f"inverse_{implementation}.csv").open(newline="", encoding="utf-8") as file:
-        rows = list(csv.DictReader(file))
+    with (root / "results" / f"{task}_{implementation}.csv").open(newline="", encoding="utf-8") as file:
+        rows = [row for row in csv.DictReader(file) if row["matches_reference"] == "1"]
     output_dir = root / "plots"
     output_dir.mkdir(exist_ok=True)
     for field, ylabel, filename in [
-        ("time_seconds", "Czas odwracania macierzy [s]", "time"),
+        ("time_seconds", "Czas odwracania macierzy [s]" if task == "inverse" else "Czas faktoryzacji LU [s]", "time"),
         ("flops", "Liczba operacji zmiennoprzecinkowych", "flops"),
     ]:
         fig, ax = plt.subplots(figsize=(9, 5.5), layout="constrained")
         for method, color, marker in [("binet", "#2563eb", "o"), ("strassen", "#ea580c", "s"),
                                       ("laderman", "#16a34a", "^")]:
-            values = sorted((row for row in rows if row["method"] == method), key=lambda row: int(row["size"]))
+            values = sorted((row for row in rows if row["method"] == method and float(row[field]) > 0),
+                            key=lambda row: int(row["size"]))
             if values:
                 ax.plot([int(row["size"]) for row in values], [float(row[field]) for row in values],
                         color=color, marker=marker, markersize=4, linewidth=1.5)
@@ -33,7 +34,7 @@ def plot_results(implementation="compiled"):
         ax.set_ylabel(ylabel)
         ax.grid(True, which="major", alpha=0.35)
         ax.spines[["top", "right"]].set_visible(False)
-        path = output_dir / f"inverse_{implementation}_{filename}.png"
+        path = output_dir / f"{task}_{implementation}_{filename}.png"
         fig.savefig(path, dpi=180)
         plt.close(fig)
         print(path)
@@ -42,4 +43,6 @@ def plot_results(implementation="compiled"):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--implementation", choices=["python", "compiled"], default="compiled")
-    plot_results(parser.parse_args().implementation)
+    parser.add_argument("--task", choices=["inverse", "lu"], default="inverse")
+    args = parser.parse_args()
+    plot_results(args.implementation, args.task)
