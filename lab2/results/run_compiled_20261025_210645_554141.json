@@ -1,0 +1,24 @@
+{
+  "started_at": "2026-10-25T21:06:45.554141+01:00",
+  "implementation": "compiled",
+  "python": "3.14.4",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "sizes": [
+    512
+  ],
+  "tasks": [
+    "inverse",
+    "lu"
+  ],
+  "repeats_up_to_128": 2,
+  "repeats_above_128": 1,
+  "refinement_steps": 1,
+  "matrix_checksums": {
+    "512": "049e77089e471b53bdfaf423a78846bab03696bfbb6340289ea06ea79ab4eb5f"
+  },
+  "time_budget_seconds": 5400.0,
+  "resume": true,
+  "complete": false,
+  "error": "LU accuracy check failed for strassen, n=512; diagnostics saved in D:\\something\\projects\\Matrix-algorithms\\lab2\\results\\lu_compiled.csv",
+  "finished_at": "2026-10-25T22:18:20.930336+01:00"
+}

@@ -1,0 +1,49 @@
+{
+  "started_at": "2026-10-25T20:43:41.654213+01:00",
+  "implementation": "compiled",
+  "python": "3.14.4",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "sizes": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    8,
+    17,
+    27,
+    32,
+    64,
+    96,
+    128
+  ],
+  "tasks": [
+    "inverse",
+    "lu"
+  ],
+  "repeats_up_to_128": 2,
+  "repeats_above_128": 1,
+  "refinement_steps": 1,
+  "matrix_checksums": {
+    "1": "ebfed886edce1ce42edc79066c31b9efd1bdcf141b736cdb57bb1b0bc3e0f7c3",
+    "2": "384a969554649ed97ac26cf19cec8a7ccd7b3fa72047dbcf980d6cdbe68054f9",
+    "3": "36f84865a276ddb657e45191a34858f13f106da28934276cba017c30e6322761",
+    "4": "d7e04f9c31e1a3e8fc6d788a50a434ed826bbbd0dfd1b5cf9b14bc1ed2967767",
+    "5": "4a0e278de48c5c2a1a3cfab4d87a2b7a473c98033db26718704404e43d6e0e5c",
+    "8": "41ba2ac6731ff1e4b9f9b4cfc5435c6ab407b3c6f163b9a43f90e7d6844d6d31",
+    "17": "93b180dedbcd01cf3be26cc48abe756944098ffe465e648a6a7b0678c5b2dc73",
+    "27": "62cda65a4e3aee797c6cdcf9171bbd4bf40e45ec09015c1d4e369352dda3dabd",
+    "32": "cc7952d138a8c1c26d937f1a4c936b76c5a1625bb830b13b4d64fc3b645b5e64",
+    "64": "62b2488c94654c8101071412682e39f0b12ac4eb8ad07b18662d9d76102b061d",
+    "96": "986e2798836dda5d35557ec4a7039cf98b712015941618891f55390cef206ce7",
+    "128": "b3d2418c67e4f4cb7705654c48236922ad6bef0352bc8168a7ffcd532b176cfc"
+  },
+  "time_budget_seconds": 900.0,
+  "resume": true,
+  "complete": true,
+  "completed_tasks": [
+    "inverse",
+    "lu"
+  ],
+  "finished_at": "2026-10-25T20:45:04.775975+01:00"
+}

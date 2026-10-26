@@ -1,0 +1,35 @@
+{
+  "started_at": "2026-10-25T20:45:59.814843+01:00",
+  "implementation": "compiled",
+  "python": "3.14.4",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "sizes": [
+    129,
+    160,
+    192,
+    255,
+    256
+  ],
+  "tasks": [
+    "inverse",
+    "lu"
+  ],
+  "repeats_up_to_128": 2,
+  "repeats_above_128": 1,
+  "refinement_steps": 1,
+  "matrix_checksums": {
+    "129": "71640b1f6fdb7eec89b5406294d940790ad2acbe7cf065c5c36eec8a6c00a716",
+    "160": "5c7fe16b27ac629c35880b1dcb6f696039d73166ec9f0029ddb4438e01aec11f",
+    "192": "cf3720d0795bc382128109c7708bcf00528e901721e866182a6509ae62931f79",
+    "255": "f7666b92270e6e2b9b2220e07883f315e6994a35cdcce2464e86bb831fa975c6",
+    "256": "99ce7109c9de7cf07c1e9714c80e73a461aa6081e96321819965033e96982c9a"
+  },
+  "time_budget_seconds": 3600.0,
+  "resume": true,
+  "complete": true,
+  "completed_tasks": [
+    "inverse",
+    "lu"
+  ],
+  "finished_at": "2026-10-25T21:06:00.059397+01:00"
+}

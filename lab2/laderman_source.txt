@@ -1,0 +1,27 @@
+Laderman recursive multiplication, rank 23 for 3x3 by 3x3.
+
+Reference: Julian David Laderman, A noncommutative algorithm for multiplying
+3x3 matrices using 23 multiplications, Bulletin of the American Mathematical
+Society 82(1), 126-128, 1976.
+DOI: https://doi.org/10.1090/S0002-9904-1976-13988-2
+
+Coefficient representation: Alexandre Sedoglavic, Universite de Lille,
+https://fmm.univ-lille.fr/3x3x3.html
+https://fmm.univ-lille.fr/3x3x3_LRP.mpl.bz2
+
+Adaptation: parameter l set to 1; input coefficient columns reordered from
+column-major to row-major. Output row ordering unchanged. Nonzero coefficients
+stored as (zero-based index, sign) pairs. The resulting bilinear identity was
+verified exactly on all 81 pairs of basis matrices.
+
+Each scalar multiplication and binary addition/subtraction counts as one.
+Unary negation, indexing, copies, allocation and integer index arithmetic are
+excluded, consistently with lab1. Arithmetic on padded zeros is included.
+Direct evaluation of these combinations uses 23 scalar multiplications and
+98 binary additions/subtractions for 3x3. No common-subexpression optimization
+of the linear combinations is applied. The reference's optimized evaluation
+scheme is not used here.
+
+Arbitrary compatible dimensions are padded independently to multiples of 3
+at each recursive level. If any dimension is below 3, the direct multiplier
+from lab1 is used. For square n=3^k: M=23^k, S=7*(23^k-9^k).

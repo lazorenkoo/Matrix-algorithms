@@ -1,0 +1,26 @@
+{
+  "started_at": "2026-10-25T22:08:54.418630+01:00",
+  "python": "3.14.4",
+  "numpy": "2.4.4",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "implementation": "compiled",
+  "module": "D:\\something\\projects\\Matrix-algorithms\\lab2\\lu_compiled.cp314-win_amd64.pyd",
+  "sizes": [
+    512
+  ],
+  "methods": [
+    "binet",
+    "strassen"
+  ],
+  "small_repeats": 2,
+  "large_repeats": 1,
+  "large_threshold": 128,
+  "row_permutations": false,
+  "relative_error_tolerance": 1e-08,
+  "normalized_residual_tolerance": 1e-10,
+  "unary_negations_counted": false,
+  "complete": false,
+  "cython": "3.3.0",
+  "error": "LU accuracy check failed for strassen, n=512; diagnostics saved in D:\\something\\projects\\Matrix-algorithms\\lab2\\results\\lu_compiled.csv",
+  "finished_at": "2026-10-25T22:18:20.929797+01:00"
+}

@@ -1,0 +1,35 @@
+{
+  "started_at": "2026-10-25T15:09:22.121017+01:00",
+  "python": "3.14.4",
+  "numpy": "2.4.4",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "implementation": "compiled",
+  "module": "D:\\something\\projects\\Matrix-algorithms\\lab2\\inverse_compiled.cp314-win_amd64.pyd",
+  "sizes": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    8,
+    17,
+    32,
+    64,
+    96,
+    128
+  ],
+  "methods": [
+    "binet",
+    "strassen"
+  ],
+  "small_repeats": 2,
+  "large_repeats": 1,
+  "large_threshold": 128,
+  "relative_error_tolerance": 1e-08,
+  "normalized_residual_tolerance": 1e-10,
+  "unary_negations_counted": false,
+  "refinement_steps": 1,
+  "cython": "3.3.0",
+  "finished_at": "2026-10-25T15:10:55.521130+01:00",
+  "complete": true
+}
