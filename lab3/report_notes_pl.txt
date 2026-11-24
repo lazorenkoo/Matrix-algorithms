@@ -1,0 +1,117 @@
+Zadanie 3. Hierarchiczna kompresja obrazu RGB
+
+Dane wejściowe: kolorowy obraz 512 × 512, fotografia Eileen Collins.
+Każdy kanał R, G, B jest osobną macierzą pikseli z przedziału [0, 255].
+Źródło zdjęcia podano w data/astronaut-source.txt.
+
+Pseudokod
+
+CreateTree(blok, r, delta):
+    jeżeli blok zawiera same zera:
+        zwróć liść zerowy
+    jeżeli mniejszy wymiar bloku jest nie większy niż r:
+        zwróć liść gęsty
+    oblicz r+1 największych wartości osobliwych i wektory
+    jeżeli sigma[r+1] < delta:
+        zwróć liść z pierwszymi r kolumnami U
+        oraz iloczynem diag(pierwsze r wartości sigma) i pierwszych r wierszy Vt
+    podziel blok w połowie wierszy i kolumn
+    zwróć węzeł z czterema wynikami CreateTree dla ćwiartek
+
+Reconstruct(węzeł):
+    dla liścia zerowego zwróć blok zer
+    dla liścia gęstego zwróć zapisany blok
+    dla liścia niskiego rzędu pomnóż dwa zapisane czynniki
+    dla węzła wewnętrznego odtwórz i złóż cztery ćwiartki
+
+DrawStructure(węzeł):
+    przejdź po wszystkich liściach
+    w granicach każdego liścia narysuj obrys
+    dla liścia niskiego rzędu narysuj pionowy i poziomy pasek o grubości k
+    dla liścia gęstego wypełnij prostokąt
+
+Istotne fragmenty kodu: _build i reconstruct w hmatrix.py,
+draw_structure i run w experiment.py. Duże bloki korzystają z częściowego
+SVD, a małe z pełnego rozkładu zredukowanego. Gdy solver częściowy nie
+osiągnie zbieżności, używamy pełnego SVD tego bloku.
+
+Wyniki: results/spectra.png zawiera widma całych kanałów.
+Pliki original_*.png pokazują dane wejściowe. Każdy plik *_channels.png
+zestawia trójkę struktur z trzema rekonstrukcjami kanałów, a *_rgb.png
+pokazuje połączony obraz. Nazwy max, min i half_min oznaczają progi
+sigma_1, sigma_512 i sigma_512/2. Każdy kanał ma własną wartość progu.
+metrics.csv porównuje liczbę zapisanych wartości (bez metadanych drzewa)
+i RMSE pikseli po zaokrągleniu do liczb całkowitych.
+
+Uruchomienie z katalogu głównego repozytorium:
+python -m lab3.experiment lab3/data/astronaut.png lab3/results
+
+Dobór parametrów
+
+Sprawdziliśmy progi bezwzględne 10, 30 i 90 dla rang 1 i 4. W każdym
+wariancie ten sam próg zastosowaliśmy do trzech kanałów RGB [0, 255].
+Porównanie rekonstrukcji znajduje się w results/intermediate/comparison.png.
+
+Dla badanego obrazu wybraliśmy r = 1 i delta = 30. Zachowujemy 36,7%
+liczby wartości gęstego obrazu, a RMSE całego RGB wynosi 3,32.
+Próg 90 przy r = 1 zmniejsza zapis do 22,7%, ale daje widoczne
+granice bloków. Wariant r = 1, delta = 10 zachowuje więcej detali
+(RMSE 1,67) kosztem przechowywania 56,4% wartości. Procent dotyczy
+liczby wartości w liściach, bez metadanych, a nie rozmiaru pliku PNG.
+
+python -m lab3.experiment lab3/data/astronaut.png lab3/results/intermediate --intermediate
+
+Weryfikacja
+
+Uruchomiono pięć testów (python -B -m unittest lab3.test_hmatrix -v).
+Sprawdzono blok zerowy, rekonstrukcję bloku rzędu 1, ścisłą nierówność
+w warunku progowym, podział nieparzystej macierzy 5 × 7 oraz mały
+liść gęsty. Testy sprawdzają także aproksymację macierzy diagonalnej
+o wartościach 10, 2, 1: dla r = 1 i delta = 3 wynik ma przekątną 10, 0, 0.
+
+Na aktualnym kodzie powtórzono wszystkie 12 wariantów obrazu 512 × 512.
+Sprawdzono wymiary wyników, zgodność zapisanego RGB z trzema osobnymi
+kanałami oraz zgodność RMSE obliczonego z PNG z wartościami w CSV.
+
+Rozszerzenie: RGB i HSV
+
+Uruchomienie: python -m lab3.extended lab3/data/astronaut.png lab3/results/extended
+
+W obu przestrzeniach normalizujemy kanały do [0,1]. Dla każdego bloku
+liczymy liczbę wartości osobliwych powyżej progu. Zapisujemy czynniki
+tylko wtedy, gdy rząd mieści się w limicie i zapis czynników jest mniejszy
+od gęstego. W przeciwnym razie dzielimy blok, a na minimalnym rozmiarze
+przechowujemy go gęsto. Profil 1 używa tolerancji 1e-10 dla rzędu
+numerycznego. Odtworzone piksele 8-bitowe są identyczne z oryginałem
+w obu przestrzeniach. Profile 2–4 używają tych samych ustawień w RGB i HSV.
+Dla profili 5–6 RGB jest punktem odniesienia z ustawieniami profilu 2.
+Parametry poszczególnych kanałów są zapisane w metrics.csv.
+
+Panele pokazują oryginalny kanał, rekonstrukcję, bloki pokolorowane według
+rzędu oraz bezwzględny błąd kanału. PSNR i SSIM liczymy po powrocie
+do RGB i zaokrągleniu pikseli. SSIM używa okna 7 × 7 i średniej po kanałach.
+Udział zapisu obejmuje tablice czynników, wartości osobliwe i bloki gęste,
+bez narzutu drzewa. Odwrotność tej wartości to współczynnik kompresji.
+
+Barwa H jest kątem. Wartości 0,99 i 0,01 opisują zbliżone odcienie
+czerwieni, lecz ich średnia arytmetyczna 0,5 opisuje inny kolor.
+Liniowe przybliżenie SVD może więc tworzyć obwódki na granicy skoku.
+Przy małym nasyceniu lub jasności zmiana H niemal nie wpływa na kolor
+RGB, ale sam kanał H może silnie zmieniać się między pikselami, przez
+co algorytm dzieli go na małe bloki. Porównujemy zatem mapę błędu H
+i wynik RGB: duży błąd liczbowy kąta nie zawsze oznacza widoczny artefakt.
+W profilu 6 silniej obcinamy H, lecz chronimy S i V, więc wynik RGB ma
+wysoki SSIM mimo większego udziału zapisanych liczb (ok. 87%).
+
+Pseudokod wariantu rozszerzonego
+
+CompressExtended(blok, r_max, delta, b_min, bezstratny):
+    jeżeli norma Frobeniusa bloku <= 1e-12, zwróć liść zerowy
+    oblicz najwyżej r_max + 1 największych wartości osobliwych
+    próg = 1e-10 w trybie bezstratnym, w przeciwnym razie delta
+    k = liczba obliczonych wartości większych od progu
+    jeżeli k <= r_max i czynniki są mniejsze od bloku:
+        dla k = 0 zwróć liść zerowy
+        zapisz czynniki i zachowane wartości osobliwe
+    w przeciwnym razie, jeżeli krótszy bok <= b_min, zapisz blok gęsty
+    w pozostałych przypadkach wywołaj CompressExtended dla czterech ćwiartek

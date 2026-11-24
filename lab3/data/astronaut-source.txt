@@ -1,0 +1,4 @@
+Eileen Collins, NASA Great Images in NASA. Public domain.
+512 x 512 RGB version distributed as skimage.data.astronaut.
+https://scikit-image.org/docs/stable/api/skimage.data.html#skimage.data.astronaut
+https://raw.githubusercontent.com/scikit-image/scikit-image/v0.25.2/skimage/data/astronaut.png
